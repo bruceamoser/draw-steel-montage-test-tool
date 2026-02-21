@@ -280,33 +280,86 @@ export async function approveAction(actorId, approvalData = {}) {
   // Perform the auto-roll
   const actor = game.actors.get(pending.actorId);
   const chrKey = pending.characteristic;
-  const chrValue = actor?.system?.characteristics?.[chrKey]?.value ?? 0;
+  const speaker = ChatMessage.getSpeaker({ actor });
 
-  const roll = new Roll("2d10 + @chr", { chr: chrValue });
-  await roll.evaluate();
-
-  // Build flavor text for the chat message
+  // Build flavor text for the chat message (plain text; Draw Steel roll template escapes flavor)
   const hero = testData.heroes.find((h) => h.actorId === pending.actorId);
   const heroName = hero?.name ?? "Unknown";
   const chrLabel = CHARACTERISTIC_LABELS[chrKey] ?? chrKey;
-  const skillLabel = pending.skill
-    ? getSkillLabel(pending.skill)
-    : null;
+  const skillLabel = pending.skill ? getSkillLabel(pending.skill) : null;
   const actionLabel = game.i18n.localize(`MONTAGE.Action.${pending.type.charAt(0).toUpperCase() + pending.type.slice(1)}`);
-  let flavor = `<strong>${heroName}</strong> — ${actionLabel} (${chrLabel}`;
+  let flavor = `${heroName} — ${actionLabel} (${chrLabel}`;
   if (skillLabel) flavor += ` / ${skillLabel}`;
-  flavor += `)`;
+  flavor += ")";
 
-  await roll.toMessage({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    flavor,
-  });
+  /** @type {number} */
+  let rollTotal;
+  /** @type {number} */
+  let naturalRoll;
+  /** @type {number} */
+  let tier;
+  /** @type {boolean} */
+  let isNat19or20;
 
-  // Extract results
-  const rollTotal = roll.total;
-  const naturalRoll = roll.dice[0]?.total ?? 0;
-  const tier = getTier(rollTotal);
-  const isNat19or20 = naturalRoll >= 19;
+  const PowerRoll = globalThis.ds?.rolls?.PowerRoll;
+  const dsCharacteristics = globalThis.ds?.CONFIG?.characteristics;
+
+  // Prefer Draw Steel system PowerRoll so edges/banes, skill effects, and tier adjustments apply.
+  if (PowerRoll && dsCharacteristics?.[chrKey] && typeof actor?.getRollData === "function") {
+    const chr = actor?.system?.characteristics?.[chrKey] ?? {};
+    const rollKey = dsCharacteristics[chrKey]?.rollKey ?? "";
+    const diceNumber = Number(chr?.dice?.number ?? 2);
+    const diceMode = chr?.dice?.mode ?? "kh";
+    const baseFormula = diceNumber > 2 ? `${diceNumber}d10${diceMode}2` : "2d10";
+    const formula = rollKey ? `${baseFormula} + @${rollKey}` : baseFormula;
+    const data = actor.getRollData();
+
+    const modifiers = {
+      edges: Number(chr?.edges ?? 0),
+      banes: Number(chr?.banes ?? 0),
+      bonuses: 0,
+    };
+
+    // Mirror Draw Steel's PowerRoll.getActorModifiers for tests.
+    if (actor.statuses?.has?.("weakened")) modifiers.banes += 1;
+    if (actor.statuses?.has?.("restrained") && ["might", "agility"].includes(chrKey)) modifiers.banes += 1;
+
+    // Skill selection in Draw Steel: +2 bonuses, plus per-skill edges/banes/bonuses via hero.skillModifiers.
+    if (pending.skill) {
+      modifiers.bonuses += 2;
+      const skillMods = actor?.system?.hero?.skillModifiers?.[pending.skill];
+      if (skillMods) {
+        modifiers.edges += Number(skillMods.edges ?? 0);
+        modifiers.banes += Number(skillMods.banes ?? 0);
+        modifiers.bonuses += Number(skillMods.bonuses ?? 0);
+      }
+    }
+
+    const dsRoll = new PowerRoll(formula, data, {
+      type: "test",
+      characteristic: chrKey,
+      flavor,
+      ...modifiers,
+    });
+    await dsRoll.evaluate({ allowInteractive: false });
+    await dsRoll.toMessage({ speaker });
+
+    rollTotal = dsRoll.total;
+    naturalRoll = dsRoll.naturalResult ?? dsRoll.dice?.[0]?.total ?? 0;
+    tier = dsRoll.product ?? getTier(rollTotal);
+    isNat19or20 = dsRoll.isCritical ?? (naturalRoll >= 19);
+  } else {
+    // Fallback: raw roll if Draw Steel system APIs aren't available.
+    const chrValue = actor?.system?.characteristics?.[chrKey]?.value ?? 0;
+    const roll = new Roll("2d10 + @chr", { chr: chrValue });
+    await roll.evaluate({ allowInteractive: false });
+    await roll.toMessage({ speaker, flavor });
+
+    rollTotal = roll.total;
+    naturalRoll = roll.dice[0]?.total ?? 0;
+    tier = getTier(rollTotal);
+    isNat19or20 = naturalRoll >= 19;
+  }
 
   action.rollTotal = rollTotal;
   action.naturalRoll = naturalRoll;
