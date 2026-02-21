@@ -68,7 +68,7 @@ export class MontageTestDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     const fields = foundry.data.fields;
 
-    const resultField = new fields.StringField({
+    const createResultField = () => new fields.StringField({
       required: false,
       blank: true,
       initial: "",
@@ -109,8 +109,8 @@ export class MontageTestDataModel extends foundry.abstract.TypeDataModel {
           actorUuid: new fields.StringField({ required: false, blank: true, initial: "" }),
           name: new fields.StringField({ required: false, blank: true, initial: "" }),
           img: new fields.StringField({ required: false, blank: true, initial: "" }),
-          round1: resultField,
-          round2: resultField,
+          round1: createResultField(),
+          round2: createResultField(),
         }),
         { required: true, initial: [] },
       ),
