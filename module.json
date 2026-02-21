@@ -28,6 +28,7 @@
   "esmodules": [
     "src/module.mjs"
   ],
+  "socket": true,
   "styles": [
     "styles/montage.css"
   ],

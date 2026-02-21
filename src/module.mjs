@@ -6,12 +6,49 @@ import { MODULE_ID, FLAGS } from "./config.mjs";
 import { initSocket } from "./socket.mjs";
 import { loadActiveTest } from "./data/montage-test.mjs";
 import { MontageAPI } from "./api/montage-api.mjs";
+import { MontageTrackerGMApp } from "./apps/montage-tracker-gm.mjs";
+import { MontageTrackerPlayerApp } from "./apps/montage-tracker-player.mjs";
+import { MontageConfigApp } from "./apps/montage-config.mjs";
+
+/* ---------------------------------------- */
+/*  Singleton app instances                 */
+/* ---------------------------------------- */
+let _gmTracker = null;
+let _playerTracker = null;
+let _configApp = null;
+
+function getGMTracker() {
+  if (!_gmTracker) _gmTracker = new MontageTrackerGMApp();
+  return _gmTracker;
+}
+
+function getPlayerTracker() {
+  if (!_playerTracker) _playerTracker = new MontageTrackerPlayerApp();
+  return _playerTracker;
+}
+
+function getConfigApp() {
+  if (!_configApp) _configApp = new MontageConfigApp();
+  return _configApp;
+}
+
+/* ---------------------------------------- */
+/*  System validation                       */
+/* ---------------------------------------- */
+let _systemValid = false;
 
 /* ---------------------------------------- */
 /*  Init Hook                               */
 /* ---------------------------------------- */
 Hooks.once("init", () => {
   console.log(`${MODULE_ID} | Initializing Draw Steel Montage Test Tool`);
+
+  // Validate that we're running on the Draw Steel system
+  if (game.system?.id !== "draw-steel") {
+    console.warn(`${MODULE_ID} | Not running on Draw Steel system — disabling.`);
+    return;
+  }
+  _systemValid = true;
 
   // Register world-scoped settings for persistence
   game.settings.register(MODULE_ID, FLAGS.ACTIVE_TEST, {
@@ -51,6 +88,7 @@ Hooks.once("init", () => {
 /*  Ready Hook                              */
 /* ---------------------------------------- */
 Hooks.once("ready", () => {
+  if (!_systemValid) return;
   console.log(`${MODULE_ID} | Ready`);
 
   // Initialize socket communication
@@ -65,7 +103,8 @@ Hooks.once("ready", () => {
   // If there's an active test and we're a player, auto-open the player tracker
   const testData = loadActiveTest();
   if (testData && testData.status === "active" && !game.user.isGM) {
-    _openPlayerTracker();
+    const tracker = getPlayerTracker();
+    tracker.render({ force: true });
   }
 
   // If there's an active test and we're GM, remind them
@@ -80,89 +119,61 @@ Hooks.once("ready", () => {
 /*  Scene Controls                          */
 /* ---------------------------------------- */
 Hooks.on("getSceneControlButtons", (controls) => {
-  // v13 API: controls is Record<string, SceneControl>, tools is Record<string, SceneControlTool>
+  if (!_systemValid) return;
   if (!controls.tokens) return;
-
-  const _handler = (event, active) => {
-    console.log(`${MODULE_ID} | Montage button clicked`, { event, active });
-    if (game.user.isGM) {
-      _openGMTracker();
-    } else {
-      _openPlayerTracker();
-    }
-  };
 
   controls.tokens.tools.montageTest = {
     name: "montageTest",
     title: "MONTAGE.Controls.OpenMontage",
     icon: "fa-solid fa-mountain-sun",
-    order: Object.keys(controls.tokens.tools).length,
     button: true,
     visible: true,
-    onChange: _handler,
-    onClick: _handler,
+    onChange: () => {
+      if (game.user.isGM) {
+        const testData = loadActiveTest();
+        if (!testData) {
+          const cfg = getConfigApp();
+          if (cfg.rendered) cfg.close();
+          else cfg.render({ force: true });
+        } else {
+          const tracker = getGMTracker();
+          if (tracker.rendered) tracker.close();
+          else tracker.render({ force: true });
+        }
+      } else {
+        const tracker = getPlayerTracker();
+        if (tracker.rendered) tracker.close();
+        else tracker.render({ force: true });
+      }
+    },
   };
-  console.log(`${MODULE_ID} | Registered montageTest tool`, controls.tokens.tools.montageTest);
 });
 
 /* ---------------------------------------- */
 /*  Chat Commands                           */
 /* ---------------------------------------- */
 Hooks.on("chatMessage", (log, message, chatData) => {
+  if (!_systemValid) return true;
   const cmd = message.trim().toLowerCase();
 
   if (cmd === "/montage") {
     if (game.user.isGM) {
-      _openGMTracker();
+      const testData = loadActiveTest();
+      if (!testData) {
+        getConfigApp().render({ force: true });
+      } else {
+        getGMTracker().render({ force: true });
+      }
     } else {
-      _openPlayerTracker();
+      getPlayerTracker().render({ force: true });
     }
     return false; // Prevent the message from being posted
   }
 
   if (cmd === "/montage new" && game.user.isGM) {
-    _openConfig();
+    getConfigApp().render({ force: true });
     return false;
   }
 
   return true;
 });
-
-/* ---------------------------------------- */
-/*  Helper functions                        */
-/* ---------------------------------------- */
-
-/** @private */
-async function _openGMTracker() {
-  try {
-    const { MontageTrackerGMApp } = await import("./apps/montage-tracker-gm.mjs");
-    const testData = loadActiveTest();
-    if (!testData) {
-      // No active test — open the config to create one
-      return _openConfig();
-    }
-    new MontageTrackerGMApp().render({ force: true });
-  } catch (err) {
-    console.error(`${MODULE_ID} | Failed to open GM tracker`, err);
-  }
-}
-
-/** @private */
-async function _openPlayerTracker() {
-  try {
-    const { MontageTrackerPlayerApp } = await import("./apps/montage-tracker-player.mjs");
-    new MontageTrackerPlayerApp().render({ force: true });
-  } catch (err) {
-    console.error(`${MODULE_ID} | Failed to open player tracker`, err);
-  }
-}
-
-/** @private */
-async function _openConfig() {
-  try {
-    const { MontageConfigApp } = await import("./apps/montage-config.mjs");
-    new MontageConfigApp().render({ force: true });
-  } catch (err) {
-    console.error(`${MODULE_ID} | Failed to open config`, err);
-  }
-}
