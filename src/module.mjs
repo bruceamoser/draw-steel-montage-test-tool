@@ -1,7 +1,7 @@
 /**
  * Draw Steel Montage Test Tool
  * Main module entry point — registers hooks, socket, settings, and scene controls.
- * v0.3.2
+ * v0.3.4
  */
 import { MODULE_ID, SYSTEM_ID } from "./config.mjs";
 import { MontageAPI } from "./api/montage-api.mjs";
@@ -9,6 +9,8 @@ import { MontageTestDataModel, MONTAGE_TEST_ITEM_TYPE } from "./items/montage-te
 import { MontageTestSheet } from "./items/montage-test-sheet.mjs";
 
 const log = (...args) => console.log(`${MODULE_ID} |`, ...args);
+
+const _TYPES_PATCHED = Symbol.for(`${MODULE_ID}.patchedItemTypes`);
 
 function _ensureTypeInList(listOwnerLabel, list, type) {
   if (!Array.isArray(list) || list.includes(type)) return false;
@@ -25,6 +27,44 @@ function _ensureTypeInList(listOwnerLabel, list, type) {
   return false;
 }
 
+function _coerceTypesToArray(types) {
+  if (!types) return [];
+  if (Array.isArray(types)) return types;
+  if (types instanceof Set) return Array.from(types);
+  if (typeof types === "object") return Object.keys(types);
+  return [];
+}
+
+function _patchItemDocumentClassTypes() {
+  const type = MONTAGE_TEST_ITEM_TYPE;
+  const cls = CONFIG.Item?.documentClass;
+  if (!cls || cls[_TYPES_PATCHED]) return false;
+
+  // Find inherited TYPES getter so we can call it.
+  let owner = cls;
+  while (owner && !Object.prototype.hasOwnProperty.call(owner, "TYPES")) owner = Object.getPrototypeOf(owner);
+  const originalGetter = owner ? Object.getOwnPropertyDescriptor(owner, "TYPES")?.get : null;
+
+  Object.defineProperty(cls, "TYPES", {
+    configurable: true,
+    get() {
+      let baseTypes;
+      try {
+        baseTypes = originalGetter ? originalGetter.call(this) : [];
+      } catch {
+        baseTypes = [];
+      }
+
+      const typesArr = _coerceTypesToArray(baseTypes);
+      if (!typesArr.includes(type)) typesArr.push(type);
+      return typesArr;
+    },
+  });
+
+  cls[_TYPES_PATCHED] = true;
+  return true;
+}
+
 function _ensureMontageTestAllowedItemType() {
   const type = MONTAGE_TEST_ITEM_TYPE;
   let changed = false;
@@ -32,7 +72,12 @@ function _ensureMontageTestAllowedItemType() {
   // Foundry's authoritative list for document type creation/UI.
   try {
     const docTypes = game.documentTypes?.Item;
-    if (Array.isArray(docTypes) && !docTypes.includes(type)) {
+    if (docTypes instanceof Set) {
+      if (!docTypes.has(type)) {
+        docTypes.add(type);
+        changed = true;
+      }
+    } else if (Array.isArray(docTypes) && !docTypes.includes(type)) {
       const mutated = _ensureTypeInList("game.documentTypes.Item", docTypes, type);
       if (!mutated) {
         // Try reassignment (some environments freeze the array).
@@ -53,7 +98,12 @@ function _ensureMontageTestAllowedItemType() {
   // System-declared list (many systems validate against this).
   try {
     const sysTypes = game.system?.documentTypes?.Item;
-    if (Array.isArray(sysTypes) && !sysTypes.includes(type)) {
+    if (sysTypes instanceof Set) {
+      if (!sysTypes.has(type)) {
+        sysTypes.add(type);
+        changed = true;
+      }
+    } else if (Array.isArray(sysTypes) && !sysTypes.includes(type)) {
       const mutated = _ensureTypeInList("game.system.documentTypes.Item", sysTypes, type);
       if (!mutated) {
         try {
@@ -92,6 +142,13 @@ function _ensureMontageTestAllowedItemType() {
     // ignore
   }
 
+  // Draw Steel's create dialog pulls options from DrawSteelItem.TYPES.
+  try {
+    if (_patchItemDocumentClassTypes()) changed = true;
+  } catch {
+    // ignore
+  }
+
   if (changed) {
     log(`Registered allowed Item type: ${type}`);
   }
@@ -109,13 +166,14 @@ Hooks.once("init", () => {
   if (game.system?.id !== SYSTEM_ID) return;
   _systemValid = true;
 
-  _ensureMontageTestAllowedItemType();
-
   // Register the custom Item type + data model
   CONFIG.Item.typeLabels ??= {};
   CONFIG.Item.dataModels ??= {};
   CONFIG.Item.typeLabels[MONTAGE_TEST_ITEM_TYPE] = "MONTAGE.Item.MontageTest";
   CONFIG.Item.dataModels[MONTAGE_TEST_ITEM_TYPE] = MontageTestDataModel;
+
+  // Ensure the type is visible/creatable in Draw Steel's custom create dialog.
+  _ensureMontageTestAllowedItemType();
 
   // Register default sheet
   const sheetConfig = foundry.applications?.sheets?.DocumentSheetConfig ?? globalThis.DocumentSheetConfig;
