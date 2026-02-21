@@ -115,6 +115,10 @@ export function initSocket() {
         notifyStateListeners(data);
         break;
 
+      case SOCKET_EVENTS.MONTAGE_ACTIVATED:
+        // Handled by module.mjs for UI management
+        break;
+
       default:
         console.warn(`${MODULE_ID} | Unknown socket event: ${event}`);
     }

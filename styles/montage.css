@@ -466,6 +466,101 @@
 }
 
 /* --------------------------------------------------------------------------
+   Phase 0 — Montage Chooser
+   -------------------------------------------------------------------------- */
+.montage-config-choose h2 {
+  text-align: center;
+  border: none;
+  margin: 0 0 8px;
+}
+
+.montage-active-notice {
+  padding: 6px 10px;
+  background: rgba(21, 101, 192, 0.15);
+  border: 1px solid var(--montage-info);
+  border-radius: var(--montage-radius);
+  font-size: 12px;
+  margin-bottom: 8px;
+  color: var(--montage-info);
+}
+
+.montage-active-notice i {
+  margin-right: 4px;
+}
+
+.montage-saved-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.montage-saved-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--montage-radius);
+  border-left: 3px solid var(--montage-border);
+}
+
+.montage-saved-info {
+  flex: 1;
+}
+
+.montage-saved-info strong {
+  font-size: 14px;
+}
+
+.montage-saved-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.montage-saved-detail {
+  font-size: 11px;
+  color: var(--montage-text-dim);
+}
+
+.montage-saved-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.montage-saved-actions button {
+  font-size: 12px;
+}
+
+.montage-empty-state {
+  text-align: center;
+  padding: 16px;
+  color: var(--montage-text-dim);
+  font-style: italic;
+}
+
+/* Back navigation */
+.montage-phase-nav {
+  margin-bottom: 4px;
+}
+
+.montage-back-btn {
+  background: none;
+  border: none;
+  color: var(--montage-text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 6px;
+}
+
+.montage-back-btn:hover {
+  color: var(--montage-text);
+}
+
+/* --------------------------------------------------------------------------
    Config Form
    -------------------------------------------------------------------------- */
 .montage-config h2 {
@@ -545,6 +640,50 @@
 .montage-gm-notes textarea {
   width: 100%;
   resize: vertical;
+}
+
+/* --------------------------------------------------------------------------
+   Phase 2 Setup Summary
+   -------------------------------------------------------------------------- */
+.montage-setup-summary {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 8px 0 12px;
+}
+
+.montage-config-setup h2 {
+  text-align: center;
+  border: none;
+  margin: 0 0 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Round-grouped Complications (Phase 2)
+   -------------------------------------------------------------------------- */
+.montage-complications-round {
+  margin: 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--montage-radius);
+  padding: 8px;
+}
+
+.montage-complications-round legend {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--montage-warning);
+}
+
+.complication-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.complication-fields .form-group {
+  margin-bottom: 0;
 }
 
 /* --------------------------------------------------------------------------

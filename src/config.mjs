@@ -9,6 +9,7 @@ export const SOCKET_NAME = `module.${MODULE_ID}`;
 export const FLAGS = {
   ACTIVE_TEST: "activeTest",
   COMPLETED_TESTS: "completedTests",
+  SAVED_TESTS: "savedTests",
 };
 
 /**
@@ -119,6 +120,7 @@ export const SOCKET_EVENTS = {
   REQUEST_REFRESH: "requestRefresh",
   ROUND_ADVANCED: "roundAdvanced",
   TEST_RESOLVED: "testResolved",
+  MONTAGE_ACTIVATED: "montageActivated",
 };
 
 /**

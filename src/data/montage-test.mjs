@@ -55,6 +55,7 @@ export function createComplication(options = {}) {
     triggerRound: options.triggerRound ?? 1,
     resolved: false,
     effect: options.effect ?? "",
+    failureOutcome: options.failureOutcome ?? "",
   };
 }
 
@@ -129,6 +130,61 @@ export async function archiveTest(testData) {
     completedAt: Date.now(),
   });
   await game.settings.set(MODULE_ID, FLAGS.COMPLETED_TESTS, completed);
+}
+
+/* ================================================ */
+/*  Draft (saved) montage test CRUD                 */
+/* ================================================ */
+
+/**
+ * Load all saved draft montage tests.
+ * @returns {Array<object>}
+ */
+export function loadDraftTests() {
+  return game.settings.get(MODULE_ID, FLAGS.SAVED_TESTS) ?? [];
+}
+
+/**
+ * Get a single draft test by ID.
+ * @param {string} testId
+ * @returns {object|null}
+ */
+export function getDraftTest(testId) {
+  const drafts = loadDraftTests();
+  return drafts.find((t) => t.id === testId) ?? null;
+}
+
+/**
+ * Save a new draft test to the saved tests array.
+ * @param {object} testData
+ */
+export async function saveDraftTest(testData) {
+  const drafts = loadDraftTests();
+  drafts.push(testData);
+  await game.settings.set(MODULE_ID, FLAGS.SAVED_TESTS, drafts);
+}
+
+/**
+ * Update an existing draft test in the saved tests array.
+ * @param {object} testData
+ */
+export async function updateDraftTest(testData) {
+  const drafts = loadDraftTests();
+  const idx = drafts.findIndex((t) => t.id === testData.id);
+  if (idx >= 0) {
+    drafts[idx] = testData;
+    await game.settings.set(MODULE_ID, FLAGS.SAVED_TESTS, drafts);
+  }
+}
+
+/**
+ * Delete a draft test from the saved tests array.
+ * @param {string} testId
+ */
+export async function deleteDraftTest(testId) {
+  const drafts = loadDraftTests();
+  const filtered = drafts.filter((t) => t.id !== testId);
+  await game.settings.set(MODULE_ID, FLAGS.SAVED_TESTS, filtered);
 }
 
 /**

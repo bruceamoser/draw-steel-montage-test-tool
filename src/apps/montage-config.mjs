@@ -1,26 +1,38 @@
-import { MODULE_ID, MONTAGE_DIFFICULTY } from "../config.mjs";
-import { calculateLimits, getDefaultMaxRounds } from "../helpers/difficulty.mjs";
+import { MODULE_ID, MONTAGE_DIFFICULTY, TEST_STATUS, SOCKET_NAME, SOCKET_EVENTS } from "../config.mjs";
+import { calculateLimits } from "../helpers/difficulty.mjs";
 import {
   createMontageTestData,
   createComplication,
   saveActiveTest,
+  loadActiveTest,
+  clearActiveTest,
   getAvailableHeroes,
+  loadDraftTests,
+  saveDraftTest,
+  updateDraftTest,
+  deleteDraftTest,
+  getDraftTest,
 } from "../data/montage-test.mjs";
+import { activateTest } from "../socket.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 /**
- * GM application for creating and configuring a new Montage Test.
+ * GM application for creating and configuring Montage Tests.
+ *
+ * Three-phase workflow:
+ *   Phase 0 — Choose: list saved montages or create a new one.
+ *   Phase 1 — Create: name, hero selection (all selected by default), difficulty.
+ *   Phase 2 — Setup: add complications per round, GM outcome notes, activate.
  */
 export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /** @override */
   static DEFAULT_OPTIONS = {
     id: "montage-config",
-    tag: "form",
     classes: ["montage-app", "montage-config"],
     window: {
-      title: "MONTAGE.Config.Title",
+      title: "MONTAGE.Controls.OpenMontage",
       icon: "fa-solid fa-mountain-sun",
       resizable: true,
     },
@@ -28,15 +40,16 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
       width: 560,
       height: "auto",
     },
-    form: {
-      handler: MontageConfigApp.#onSubmit,
-      submitOnChange: false,
-      closeOnSubmit: true,
-    },
     actions: {
+      newTest: MontageConfigApp.#onNewTest,
+      selectTest: MontageConfigApp.#onSelectTest,
+      deleteTest: MontageConfigApp.#onDeleteTest,
+      createTest: MontageConfigApp.#onCreateTest,
+      backToList: MontageConfigApp.#onBackToList,
+      activateTest: MontageConfigApp.#onActivateTest,
       addComplication: MontageConfigApp.#onAddComplication,
       removeComplication: MontageConfigApp.#onRemoveComplication,
-      recalculate: MontageConfigApp.#onRecalculate,
+      saveSetup: MontageConfigApp.#onSaveSetup,
     },
   };
 
@@ -47,182 +60,370 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
     },
   };
 
-  /**
-   * Working copy of the configuration data.
-   * @type {object}
-   */
-  #formData = {
+  /* ----- Navigation state ----- */
+
+  #currentPhase = 0;
+  #editingTestId = null;
+
+  /* ----- Phase 1 working state ----- */
+
+  #phase1Data = {
     name: "",
     difficulty: MONTAGE_DIFFICULTY.MODERATE,
-    heroCount: 0,
-    maxRounds: getDefaultMaxRounds(),
-    successLimit: 0,
-    failureLimit: 0,
-    manualLimits: false,
-    heroes: [],
-    complications: [],
-    gmNotes: {
-      totalSuccess: "",
-      partialSuccess: "",
-      totalFailure: "",
-      general: "",
-    },
+    selectedHeroIds: null, // null = uninitialised → default to all
   };
+
+  #phase1Initialized = false;
+
+  /* ----- Phase 2 working state ----- */
+
+  #phase2Data = {
+    complications: [],
+    gmNotes: { totalSuccess: "", partialSuccess: "", totalFailure: "" },
+  };
+
+  #phase2Initialized = false;
+
+  /* ================================================ */
+  /*  Context                                         */
+  /* ================================================ */
 
   /** @override */
   async _prepareContext(options) {
-    const availableHeroes = getAvailableHeroes();
+    switch (this.#currentPhase) {
+      case 1: return this.#preparePhase1();
+      case 2: return this.#preparePhase2();
+      default: return this.#preparePhase0();
+    }
+  }
 
-    // Initialize hero count from available heroes if not already set
-    if (this.#formData.heroCount === 0 && availableHeroes.length > 0) {
-      this.#formData.heroCount = availableHeroes.length;
-      this.#formData.heroes = availableHeroes;
+  /**
+   * Phase 0 context — choose an existing montage or create a new one.
+   * Also migrates any orphaned SETUP test from ACTIVE_TEST to drafts.
+   */
+  async #preparePhase0() {
+    // Migrate orphaned SETUP test if present
+    const activeTest = loadActiveTest();
+    if (activeTest && activeTest.status === TEST_STATUS.SETUP) {
+      await saveDraftTest(activeTest);
+      await clearActiveTest();
     }
 
-    // Recalculate limits unless manually overridden
-    if (!this.#formData.manualLimits) {
-      const limits = calculateLimits(this.#formData.difficulty, this.#formData.heroCount || 1);
-      this.#formData.successLimit = limits.successLimit;
-      this.#formData.failureLimit = limits.failureLimit;
-    }
+    const drafts = loadDraftTests();
+    const currentActive = loadActiveTest();
 
     return {
-      formData: this.#formData,
-      availableHeroes,
+      phase: 0,
+      savedTests: drafts.map((t) => {
+        const diffKey = t.difficulty.charAt(0).toUpperCase() + t.difficulty.slice(1);
+        return {
+          id: t.id,
+          name: t.name,
+          difficulty: t.difficulty,
+          difficultyLabel: game.i18n.localize(`MONTAGE.Difficulty.${diffKey}`),
+          heroCount: t.heroes?.length ?? t.heroCount ?? 0,
+          complicationCount: t.complications?.length ?? 0,
+        };
+      }),
+      hasActiveTest: !!currentActive && currentActive.status === TEST_STATUS.ACTIVE,
+      activeTestName: currentActive?.name,
+    };
+  }
+
+  /**
+   * Phase 1 context — creating a new montage test.
+   */
+  #preparePhase1() {
+    const availableHeroes = getAvailableHeroes();
+
+    if (!this.#phase1Initialized) {
+      this.#phase1Data.selectedHeroIds = new Set(availableHeroes.map((h) => h.actorId));
+      this.#phase1Data.name = "";
+      this.#phase1Data.difficulty = MONTAGE_DIFFICULTY.MODERATE;
+      this.#phase1Initialized = true;
+    }
+
+    const heroCount = this.#phase1Data.selectedHeroIds.size;
+    const limits = calculateLimits(this.#phase1Data.difficulty, heroCount || 1);
+
+    return {
+      phase: 1,
+      formData: this.#phase1Data,
+      availableHeroes: availableHeroes.map((h) => ({
+        ...h,
+        selected: this.#phase1Data.selectedHeroIds.has(h.actorId),
+      })),
       difficulties: Object.entries(MONTAGE_DIFFICULTY).map(([key, value]) => ({
         value,
         label: game.i18n.localize(`MONTAGE.Difficulty.${key.charAt(0) + key.slice(1).toLowerCase()}`),
-        selected: value === this.#formData.difficulty,
+        selected: value === this.#phase1Data.difficulty,
       })),
-      roundOptions: [1, 2, 3, 4, 5].map((n) => ({
-        value: n,
-        label: `${n}`,
-        selected: n === this.#formData.maxRounds,
-      })),
+      heroCount,
+      successLimit: limits.successLimit,
+      failureLimit: limits.failureLimit,
     };
   }
+
+  /**
+   * Phase 2 context — configuring complications & GM notes before activation.
+   */
+  #preparePhase2() {
+    const testData = getDraftTest(this.#editingTestId);
+    if (!testData) {
+      // Draft was deleted or missing — fall back to Phase 0
+      this.#currentPhase = 0;
+      return this.#preparePhase0();
+    }
+
+    if (!this.#phase2Initialized) {
+      this.#phase2Data.complications = (testData.complications ?? []).map((c) => ({ ...c }));
+      this.#phase2Data.gmNotes = {
+        totalSuccess: testData.gmNotes?.totalSuccess ?? "",
+        partialSuccess: testData.gmNotes?.partialSuccess ?? "",
+        totalFailure: testData.gmNotes?.totalFailure ?? "",
+      };
+      this.#phase2Initialized = true;
+    } else if (this.element) {
+      // Sync form inputs before re-render so text isn't lost
+      this.#syncPhase2FromForm();
+    }
+
+    const round1Complications = this.#phase2Data.complications.filter((c) => c.triggerRound === 1);
+    const round2Complications = this.#phase2Data.complications.filter((c) => c.triggerRound === 2);
+
+    return {
+      phase: 2,
+      test: testData,
+      round1Complications,
+      round2Complications,
+      gmNotes: this.#phase2Data.gmNotes,
+      difficultyLabel: game.i18n.localize(
+        `MONTAGE.Difficulty.${testData.difficulty.charAt(0).toUpperCase() + testData.difficulty.slice(1)}`,
+      ),
+    };
+  }
+
+  /* ================================================ */
+  /*  Render hooks                                    */
+  /* ================================================ */
 
   /** @override */
   _onRender(context, options) {
     super._onRender(context, options);
 
-    // Live recalculation on difficulty/hero count change
-    const difficultySelect = this.element.querySelector('[name="difficulty"]');
-    const heroCountInput = this.element.querySelector('[name="heroCount"]');
-    const manualCheckbox = this.element.querySelector('[name="manualLimits"]');
-
-    difficultySelect?.addEventListener("change", () => {
-      this.#formData.difficulty = difficultySelect.value;
-      if (!this.#formData.manualLimits) this.render();
-    });
-
-    heroCountInput?.addEventListener("change", () => {
-      this.#formData.heroCount = parseInt(heroCountInput.value) || 1;
-      if (!this.#formData.manualLimits) this.render();
-    });
-
-    manualCheckbox?.addEventListener("change", () => {
-      this.#formData.manualLimits = manualCheckbox.checked;
-      if (!manualCheckbox.checked) this.render();
-    });
-
-    // Hero selection checkboxes
-    this.element.querySelectorAll('.hero-select input[type="checkbox"]').forEach((cb) => {
-      cb.addEventListener("change", () => {
-        this.#updateSelectedHeroes();
+    if (context.phase === 1) {
+      // Difficulty change → recalculate and re-render
+      const difficultySelect = this.element.querySelector('[name="difficulty"]');
+      difficultySelect?.addEventListener("change", () => {
+        this.#phase1Data.difficulty = difficultySelect.value;
+        this.render();
       });
-    });
+
+      // Hero checkboxes → inline update limits (no full re-render)
+      this.element.querySelectorAll('.hero-select input[type="checkbox"]').forEach((cb) => {
+        cb.addEventListener("change", () => {
+          if (cb.checked) this.#phase1Data.selectedHeroIds.add(cb.value);
+          else this.#phase1Data.selectedHeroIds.delete(cb.value);
+          this.#updateLimitsDisplay();
+        });
+      });
+
+      // Sync name input on typing
+      const nameInput = this.element.querySelector('[name="testName"]');
+      nameInput?.addEventListener("input", () => {
+        this.#phase1Data.name = nameInput.value;
+      });
+    }
+  }
+
+  /* ================================================ */
+  /*  Helpers                                         */
+  /* ================================================ */
+
+  /**
+   * Update the limits display inline (no re-render needed).
+   */
+  #updateLimitsDisplay() {
+    const heroCount = this.#phase1Data.selectedHeroIds.size;
+    const limits = calculateLimits(this.#phase1Data.difficulty, heroCount || 1);
+
+    const successEl = this.element.querySelector('[data-limit="success"]');
+    const failureEl = this.element.querySelector('[data-limit="failure"]');
+    const countEl = this.element.querySelector('[data-hero-count]');
+
+    if (successEl) successEl.textContent = limits.successLimit;
+    if (failureEl) failureEl.textContent = limits.failureLimit;
+    if (countEl) countEl.textContent = heroCount;
   }
 
   /**
-   * Update the selected heroes list from checkbox state.
+   * Read Phase 2 form inputs back into #phase2Data.
    */
-  #updateSelectedHeroes() {
-    const checkboxes = this.element.querySelectorAll('.hero-select input[type="checkbox"]:checked');
+  #syncPhase2FromForm() {
+    if (!this.element) return;
+
+    for (const comp of this.#phase2Data.complications) {
+      const descInput = this.element.querySelector(`[name="comp-desc-${comp.id}"]`);
+      const failInput = this.element.querySelector(`[name="comp-fail-${comp.id}"]`);
+      if (descInput) comp.description = descInput.value;
+      if (failInput) comp.failureOutcome = failInput.value;
+    }
+
+    const tsInput = this.element.querySelector('[name="gmNotes-totalSuccess"]');
+    const psInput = this.element.querySelector('[name="gmNotes-partialSuccess"]');
+    const tfInput = this.element.querySelector('[name="gmNotes-totalFailure"]');
+    if (tsInput) this.#phase2Data.gmNotes.totalSuccess = tsInput.value;
+    if (psInput) this.#phase2Data.gmNotes.partialSuccess = psInput.value;
+    if (tfInput) this.#phase2Data.gmNotes.totalFailure = tfInput.value;
+  }
+
+  /* ================================================ */
+  /*  Actions                                         */
+  /* ================================================ */
+
+  /** Phase 0 — Navigate to Phase 1 to create a new test. */
+  static #onNewTest() {
+    this.#currentPhase = 1;
+    this.#phase1Initialized = false;
+    this.render();
+  }
+
+  /** Phase 0 — Open an existing draft test for editing (Phase 2). */
+  static #onSelectTest(event, target) {
+    const testId = target.dataset.testId;
+    this.#editingTestId = testId;
+    this.#currentPhase = 2;
+    this.#phase2Initialized = false;
+    this.render();
+  }
+
+  /** Phase 0 — Delete a saved draft test. */
+  static async #onDeleteTest(event, target) {
+    const testId = target.dataset.testId;
+    await deleteDraftTest(testId);
+    this.render();
+  }
+
+  /** Phase 1 / Phase 2 — Navigate back to Phase 0. */
+  static #onBackToList() {
+    this.#currentPhase = 0;
+    this.#editingTestId = null;
+    this.#phase1Initialized = false;
+    this.#phase2Initialized = false;
+    this.render();
+  }
+
+  /**
+   * Phase 1 — Create the montage test, save as draft, then transition to Phase 2.
+   */
+  static async #onCreateTest() {
+    const name = this.#phase1Data.name || "Montage Test";
+    const difficulty = this.#phase1Data.difficulty;
     const availableHeroes = getAvailableHeroes();
-    const selectedIds = new Set([...checkboxes].map((cb) => cb.value));
+    const heroes = availableHeroes.filter((h) => this.#phase1Data.selectedHeroIds.has(h.actorId));
 
-    this.#formData.heroes = availableHeroes.filter((h) => selectedIds.has(h.actorId));
-    this.#formData.heroCount = this.#formData.heroes.length;
-
-    if (!this.#formData.manualLimits) {
-      this.render();
-    }
-  }
-
-  /**
-   * Handle adding a new complication.
-   */
-  static #onAddComplication() {
-    this.#formData.complications.push(createComplication({ triggerRound: 1 }));
-    this.render();
-  }
-
-  /**
-   * Handle removing a complication.
-   * @param {Event} event
-   * @param {HTMLElement} target
-   */
-  static #onRemoveComplication(event, target) {
-    const idx = parseInt(target.dataset.index);
-    if (!isNaN(idx)) {
-      this.#formData.complications.splice(idx, 1);
-      this.render();
-    }
-  }
-
-  /**
-   * Handle recalculate button click.
-   */
-  static #onRecalculate() {
-    this.#formData.manualLimits = false;
-    this.render();
-  }
-
-  /**
-   * Handle form submission — create and save the montage test.
-   * @param {Event} event
-   * @param {HTMLFormElement} form
-   * @param {FormDataExtended} formData
-   */
-  static async #onSubmit(event, form, formData) {
-    const data = foundry.utils.expandObject(formData.object);
-
-    // Read complications from form
-    const complications = [];
-    const compDescs = this.element.querySelectorAll('[name^="complication-desc-"]');
-    const compEffects = this.element.querySelectorAll('[name^="complication-effect-"]');
-    const compRounds = this.element.querySelectorAll('[name^="complication-round-"]');
-    for (let i = 0; i < compDescs.length; i++) {
-      complications.push(createComplication({
-        description: compDescs[i]?.value ?? "",
-        effect: compEffects[i]?.value ?? "",
-        triggerRound: parseInt(compRounds[i]?.value) || 1,
-      }));
+    if (heroes.length === 0) {
+      ui.notifications.warn(game.i18n.localize("MONTAGE.Warn.NoHeroes"));
+      return;
     }
 
     const testData = createMontageTestData({
-      name: data.name || "Montage Test",
-      difficulty: data.difficulty || MONTAGE_DIFFICULTY.MODERATE,
-      heroCount: this.#formData.heroes.length,
-      heroes: this.#formData.heroes,
-      maxRounds: parseInt(data.maxRounds) || getDefaultMaxRounds(),
-      successLimit: data.manualLimits ? parseInt(data.successLimit) : undefined,
-      failureLimit: data.manualLimits ? parseInt(data.failureLimit) : undefined,
-      complications,
-      gmNotes: {
-        totalSuccess: data["gmNotes.totalSuccess"] ?? "",
-        partialSuccess: data["gmNotes.partialSuccess"] ?? "",
-        totalFailure: data["gmNotes.totalFailure"] ?? "",
-        general: data["gmNotes.general"] ?? "",
-      },
+      name,
+      difficulty,
+      heroCount: heroes.length,
+      heroes,
     });
 
-    await saveActiveTest(testData);
+    await saveDraftTest(testData);
     ui.notifications.info(game.i18n.format("MONTAGE.Notify.TestCreated", { name: testData.name }));
 
-    // Open the GM tracker
+    // Transition to Phase 2 for this test
+    this.#editingTestId = testData.id;
+    this.#currentPhase = 2;
+    this.#phase1Initialized = false;
+    this.#phase2Initialized = false;
+    this.render();
+  }
+
+  /**
+   * Phase 2 — Add a complication to the specified round.
+   */
+  static #onAddComplication(event, target) {
+    // Sync form first so existing text isn't lost
+    this.#syncPhase2FromForm();
+    const round = parseInt(target.dataset.round) || 1;
+    this.#phase2Data.complications.push(createComplication({ triggerRound: round }));
+    this.render();
+  }
+
+  /**
+   * Phase 2 — Remove a complication.
+   */
+  static #onRemoveComplication(event, target) {
+    this.#syncPhase2FromForm();
+    const id = target.dataset.complicationId;
+    const idx = this.#phase2Data.complications.findIndex((c) => c.id === id);
+    if (idx >= 0) {
+      this.#phase2Data.complications.splice(idx, 1);
+      this.render();
+    }
+  }
+
+  /**
+   * Phase 2 — Save complications & notes to draft without activating.
+   */
+  static async #onSaveSetup() {
+    this.#syncPhase2FromForm();
+
+    const testData = getDraftTest(this.#editingTestId);
+    if (!testData) return;
+
+    testData.complications = this.#phase2Data.complications.map((c) => ({ ...c }));
+    testData.gmNotes = { ...this.#phase2Data.gmNotes };
+
+    await updateDraftTest(testData);
+    ui.notifications.info(game.i18n.localize("MONTAGE.Notify.SetupSaved"));
+  }
+
+  /**
+   * Phase 2 — Save, activate the test, and push UI to players.
+   */
+  static async #onActivateTest() {
+    // Guard: don't allow activation if another test is already active
+    const existing = loadActiveTest();
+    if (existing && existing.status === TEST_STATUS.ACTIVE) {
+      ui.notifications.warn(game.i18n.localize("MONTAGE.Warn.ActiveTestRunning"));
+      return;
+    }
+
+    this.#syncPhase2FromForm();
+
+    const testData = getDraftTest(this.#editingTestId);
+    if (!testData) return;
+
+    // Apply complications & notes
+    testData.complications = this.#phase2Data.complications.map((c) => ({ ...c }));
+    testData.gmNotes = { ...this.#phase2Data.gmNotes };
+
+    // Save to active test slot with SETUP status so activateTest() picks it up
+    testData.status = TEST_STATUS.SETUP;
+    await saveActiveTest(testData);
+
+    // Remove from drafts
+    await deleteDraftTest(this.#editingTestId);
+
+    // Activate (transitions SETUP → ACTIVE, creates round data, broadcasts)
+    await activateTest();
+
+    // Tell all players to open their tracker
+    game.socket.emit(SOCKET_NAME, {
+      event: SOCKET_EVENTS.MONTAGE_ACTIVATED,
+      data: {},
+    });
+
+    // Open GM tracker, close config
     const { MontageTrackerGMApp } = await import("./montage-tracker-gm.mjs");
     new MontageTrackerGMApp().render({ force: true });
+    this.close();
   }
 }
