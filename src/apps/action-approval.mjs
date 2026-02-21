@@ -67,6 +67,23 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
       aidTargetName = aidHero?.name ?? "Unknown";
     }
 
+    // Build characteristic/skill labels if present
+    let characteristicLabel = null;
+    let characteristicDisplay = null;
+    if (pending.characteristic) {
+      const actor = game.actors.get(this.#actorId);
+      const chrName = game.i18n.localize(
+        `DRAW_STEEL.Characteristic.${pending.characteristic.charAt(0).toUpperCase() + pending.characteristic.slice(1)}.Full`,
+      );
+      const chrValue = actor?.system?.characteristics?.[pending.characteristic]?.value ?? 0;
+      characteristicLabel = chrName;
+      characteristicDisplay = `${chrName} (${chrValue >= 0 ? "+" : ""}${chrValue})`;
+    }
+    let skillLabel = null;
+    if (pending.skill) {
+      skillLabel = game.i18n.localize(`DRAW_STEEL.SKILL.List.${pending.skill}`);
+    }
+
     const isRoll = pending.type === ACTION_TYPE.ROLL;
     const isAid = pending.type === ACTION_TYPE.AID;
     const isAbility = pending.type === ACTION_TYPE.ABILITY;
@@ -90,6 +107,10 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
       ),
       description: pending.description ?? "",
       aidTargetName,
+      characteristicDisplay,
+      skillLabel,
+      hasCharacteristic: !!characteristicDisplay,
+      hasSkill: !!skillLabel,
       isRoll,
       isAid,
       isAbility,

@@ -84,6 +84,7 @@
         <div class="montage-pending-info">
           <strong>{{this.heroName}}</strong>
           <span class="montage-action-type">{{this.typeLabel}}</span>
+          {{#if this.chrLabel}}<span class="montage-chr-label">({{this.chrLabel}}{{#if this.skillLabel}} / {{this.skillLabel}}{{/if}})</span>{{/if}}
           {{#if this.description}}<em class="montage-action-desc">"{{this.description}}"</em>{{/if}}
         </div>
         <div class="montage-pending-buttons">
@@ -151,6 +152,7 @@
         <img src="{{this.heroImg}}" alt="{{this.heroName}}" class="montage-hero-thumb" />
         <div class="montage-action-details">
           <strong>{{this.heroName}}</strong> — {{this.typeLabel}}
+          {{#if this.chrLabel}}<span class="montage-chr-label">({{this.chrLabel}}{{#if this.skillLabel}} / {{this.skillLabel}}{{/if}})</span>{{/if}}
           {{#if this.description}}<span class="montage-action-desc">"{{this.description}}"</span>{{/if}}
           {{#if this.resolved}}
           <span class="montage-action-outcome">{{this.outcomeLabel}}</span>
@@ -164,6 +166,9 @@
           {{/if}}
           {{/if}}
         </div>
+        <button type="button" data-action="removeAction" data-actor-id="{{this.actorId}}" class="montage-remove-action-btn" title="{{localize 'MONTAGE.Tracker.RemoveAction'}}">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
       </div>
       {{/each}}
     </div>

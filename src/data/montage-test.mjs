@@ -81,6 +81,8 @@ export function createActionData(options) {
     actorId: options.actorId,
     type: options.type ?? ACTION_TYPE.NOTHING,
     description: options.description ?? "",
+    characteristic: options.characteristic ?? null,
+    skill: options.skill ?? null,
     difficulty: options.difficulty ?? null,
     rollTotal: options.rollTotal ?? null,
     naturalRoll: options.naturalRoll ?? null,

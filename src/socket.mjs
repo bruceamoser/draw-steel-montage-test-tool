@@ -251,11 +251,13 @@ export async function approveAction(actorId, approvalData = {}) {
     return;
   }
 
-  // For "roll" and "aid" — mark as approved, awaiting roll result
+  // For "roll" and "aid" — auto-roll using the hero's characteristic and record result
   const action = createActionData({
     actorId: pending.actorId,
     type: pending.type,
     description: pending.description,
+    characteristic: pending.characteristic ?? null,
+    skill: pending.skill ?? null,
     difficulty: approvalData.difficulty ?? null,
     aidTarget: pending.aidTarget ?? null,
     approved: true,
@@ -263,6 +265,61 @@ export async function approveAction(actorId, approvalData = {}) {
     gmNotes: approvalData.gmNotes ?? "",
   });
   round.actions.push(action);
+
+  // Perform the auto-roll
+  const actor = game.actors.get(pending.actorId);
+  const chrKey = pending.characteristic;
+  const chrValue = actor?.system?.characteristics?.[chrKey]?.value ?? 0;
+
+  const roll = new Roll("2d10 + @chr", { chr: chrValue });
+  await roll.evaluate();
+
+  // Build flavor text for the chat message
+  const hero = testData.heroes.find((h) => h.actorId === pending.actorId);
+  const heroName = hero?.name ?? "Unknown";
+  const chrLabel = game.i18n.localize(`DRAW_STEEL.Characteristic.${chrKey.charAt(0).toUpperCase() + chrKey.slice(1)}.Full`);
+  const skillLabel = pending.skill
+    ? game.i18n.localize(`DRAW_STEEL.SKILL.List.${pending.skill}`)
+    : null;
+  const actionLabel = game.i18n.localize(`MONTAGE.Action.${pending.type.charAt(0).toUpperCase() + pending.type.slice(1)}`);
+  let flavor = `<strong>${heroName}</strong> — ${actionLabel} (${chrLabel}`;
+  if (skillLabel) flavor += ` / ${skillLabel}`;
+  flavor += `)`;
+
+  await roll.toMessage({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    flavor,
+  });
+
+  // Extract results
+  const rollTotal = roll.total;
+  const naturalRoll = roll.dice[0]?.total ?? 0;
+  const tier = getTier(rollTotal);
+  const isNat19or20 = naturalRoll >= 19;
+
+  action.rollTotal = rollTotal;
+  action.naturalRoll = naturalRoll;
+  action.tier = tier;
+
+  if (action.type === ACTION_TYPE.AID) {
+    const assistOutcome = getAssistOutcome(tier);
+    action.aidResult = assistOutcome.key;
+    action.resolved = true;
+  } else if (action.type === ACTION_TYPE.ROLL) {
+    if (action.difficulty) {
+      const outcome = getTestOutcome(action.difficulty, tier, isNat19or20);
+      action.outcome = outcome.key;
+      action.isSuccess = outcome.isSuccess;
+
+      if (outcome.isSuccess) {
+        testData.currentSuccesses += 1;
+      } else {
+        testData.currentFailures += 1;
+      }
+    }
+    action.resolved = true;
+  }
+
   await saveActiveTest(testData);
 
   // Notify the player that their action is approved
@@ -278,6 +335,8 @@ export async function approveAction(actorId, approvalData = {}) {
   });
 
   broadcastState(testData);
+
+  await checkRoundCompletion(testData);
 }
 
 /**
@@ -304,6 +363,41 @@ export async function rejectAction(actorId, reason = "") {
     },
   });
 
+  broadcastState(testData);
+}
+
+/**
+ * GM removes an approved action from the current round.
+ * Reverses any tally changes that were applied.
+ * @param {string} actorId - The hero's actor ID
+ */
+export async function removeAction(actorId) {
+  const testData = loadActiveTest();
+  if (!testData || testData.status !== TEST_STATUS.ACTIVE) return;
+
+  const round = getCurrentRound(testData);
+  if (!round) return;
+
+  const actionIdx = round.actions.findIndex((a) => a.actorId === actorId);
+  if (actionIdx === -1) return;
+
+  const action = round.actions[actionIdx];
+
+  // Reverse tally changes
+  if (action.resolved) {
+    if (action.type === ACTION_TYPE.ABILITY) {
+      testData.currentSuccesses = Math.max(0, testData.currentSuccesses - (action.autoSuccesses ?? 0));
+    } else if (action.type === ACTION_TYPE.ROLL) {
+      if (action.isSuccess === true) {
+        testData.currentSuccesses = Math.max(0, testData.currentSuccesses - 1);
+      } else if (action.isSuccess === false) {
+        testData.currentFailures = Math.max(0, testData.currentFailures - 1);
+      }
+    }
+  }
+
+  round.actions.splice(actionIdx, 1);
+  await saveActiveTest(testData);
   broadcastState(testData);
 }
 

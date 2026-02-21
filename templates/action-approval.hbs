@@ -28,6 +28,20 @@
   </div>
   {{/if}}
 
+  {{!-- Characteristic & Skill --}}
+  {{#if hasCharacteristic}}
+  <div class="form-group">
+    <label>{{localize "MONTAGE.Approval.Characteristic"}}</label>
+    <span class="montage-approval-value">{{characteristicDisplay}}</span>
+  </div>
+  {{/if}}
+  {{#if hasSkill}}
+  <div class="form-group">
+    <label>{{localize "MONTAGE.Approval.Skill"}}</label>
+    <span class="montage-approval-value">{{skillLabel}}</span>
+  </div>
+  {{/if}}
+
   {{!-- Test Difficulty Selector (for rolls and aid) --}}
   {{#if needsDifficulty}}
   <div class="form-group">

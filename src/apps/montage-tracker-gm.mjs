@@ -10,6 +10,7 @@ import {
   adjustTally,
   approveAction,
   rejectAction,
+  removeAction,
 } from "../socket.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -55,6 +56,7 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
       rejectAction: MontageTrackerGMApp.#onRejectAction,
       resolveComplication: MontageTrackerGMApp.#onResolveComplication,
       enterRollResult: MontageTrackerGMApp.#onEnterRollResult,
+      removeAction: MontageTrackerGMApp.#onRemoveAction,
       archiveTest: MontageTrackerGMApp.#onArchiveTest,
       newTest: MontageTrackerGMApp.#onNewTest,
     },
@@ -81,17 +83,35 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
     // Enrich pending actions with hero names/images
     const enrichedPending = pendingActions.map((p) => {
       const hero = testData.heroes.find((h) => h.actorId === p.actorId);
+      let chrLabel = null;
+      if (p.characteristic) {
+        chrLabel = game.i18n.localize(`DRAW_STEEL.Characteristic.${p.characteristic.charAt(0).toUpperCase() + p.characteristic.slice(1)}.Full`);
+      }
+      let skillLabel = null;
+      if (p.skill) {
+        skillLabel = game.i18n.localize(`DRAW_STEEL.SKILL.List.${p.skill}`);
+      }
       return {
         ...p,
         heroName: hero?.name ?? "Unknown",
         heroImg: hero?.img ?? "icons/svg/mystery-man.svg",
         typeLabel: game.i18n.localize(`MONTAGE.Action.${p.type.charAt(0).toUpperCase() + p.type.slice(1)}`),
+        chrLabel,
+        skillLabel,
       };
     });
 
     // Enrich current round actions
     const roundActions = (currentRound?.actions ?? []).map((a) => {
       const hero = testData.heroes.find((h) => h.actorId === a.actorId);
+      let chrLabel = null;
+      if (a.characteristic) {
+        chrLabel = game.i18n.localize(`DRAW_STEEL.Characteristic.${a.characteristic.charAt(0).toUpperCase() + a.characteristic.slice(1)}.Full`);
+      }
+      let skillLabel = null;
+      if (a.skill) {
+        skillLabel = game.i18n.localize(`DRAW_STEEL.SKILL.List.${a.skill}`);
+      }
       return {
         ...a,
         heroName: hero?.name ?? "Unknown",
@@ -99,6 +119,8 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
         typeLabel: game.i18n.localize(`MONTAGE.Action.${a.type.charAt(0).toUpperCase() + a.type.slice(1)}`),
         outcomeLabel: a.outcome ? game.i18n.localize(`MONTAGE.Outcome.${a.outcome.charAt(0).toUpperCase() + a.outcome.slice(1)}`) : "",
         aidResultLabel: a.aidResult ? game.i18n.localize(`MONTAGE.Assist.${a.aidResult.charAt(0).toUpperCase() + a.aidResult.slice(1)}`) : "",
+        chrLabel,
+        skillLabel,
       };
     });
 
@@ -274,6 +296,26 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
         naturalRoll: result.naturalRoll,
       });
     }
+  }
+
+  static async #onRemoveAction(event, target) {
+    const actorId = target.dataset.actorId;
+    const testData = loadActiveTest();
+    if (!testData) return;
+
+    const hero = testData.heroes.find((h) => h.actorId === actorId);
+    const heroName = hero?.name ?? "Unknown";
+
+    const confirm = await Dialog.confirm({
+      title: game.i18n.localize("MONTAGE.Confirm.RemoveAction"),
+      content: `<p>${game.i18n.format("MONTAGE.Confirm.RemoveActionMsg", { name: heroName })}</p>`,
+    });
+    if (!confirm) return;
+
+    await removeAction(actorId);
+    ui.notifications.info(
+      game.i18n.format("MONTAGE.Notify.ActionRemoved", { name: heroName }),
+    );
   }
 
   static async #onArchiveTest() {
