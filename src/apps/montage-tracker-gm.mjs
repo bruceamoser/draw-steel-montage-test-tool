@@ -191,7 +191,7 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
 
   static async #onEditConfig() {
     const { MontageConfigApp } = await import("./montage-config.mjs");
-    new MontageConfigApp().render(true);
+    new MontageConfigApp().render({ force: true });
   }
 
   static async #onAdjustSuccess(event, target) {
@@ -211,7 +211,7 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
   static async #onApproveAction(event, target) {
     const actorId = target.dataset.actorId;
     const { ActionApprovalApp } = await import("./action-approval.mjs");
-    new ActionApprovalApp({ actorId }).render(true);
+    new ActionApprovalApp({ actorId }).render({ force: true });
   }
 
   static async #onRejectAction(event, target) {
@@ -291,7 +291,7 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
     const { clearActiveTest } = await import("../data/montage-test.mjs");
     await clearActiveTest();
     const { MontageConfigApp } = await import("./montage-config.mjs");
-    new MontageConfigApp().render(true);
+    new MontageConfigApp().render({ force: true });
     this.close();
   }
 }

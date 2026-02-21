@@ -128,23 +128,35 @@ Hooks.on("chatMessage", (log, message, chatData) => {
 
 /** @private */
 async function _openGMTracker() {
-  const { MontageTrackerGMApp } = await import("./apps/montage-tracker-gm.mjs");
-  const testData = loadActiveTest();
-  if (!testData) {
-    // No active test — open the config to create one
-    return _openConfig();
+  try {
+    const { MontageTrackerGMApp } = await import("./apps/montage-tracker-gm.mjs");
+    const testData = loadActiveTest();
+    if (!testData) {
+      // No active test — open the config to create one
+      return _openConfig();
+    }
+    new MontageTrackerGMApp().render({ force: true });
+  } catch (err) {
+    console.error(`${MODULE_ID} | Failed to open GM tracker`, err);
   }
-  new MontageTrackerGMApp().render(true);
 }
 
 /** @private */
 async function _openPlayerTracker() {
-  const { MontageTrackerPlayerApp } = await import("./apps/montage-tracker-player.mjs");
-  new MontageTrackerPlayerApp().render(true);
+  try {
+    const { MontageTrackerPlayerApp } = await import("./apps/montage-tracker-player.mjs");
+    new MontageTrackerPlayerApp().render({ force: true });
+  } catch (err) {
+    console.error(`${MODULE_ID} | Failed to open player tracker`, err);
+  }
 }
 
 /** @private */
 async function _openConfig() {
-  const { MontageConfigApp } = await import("./apps/montage-config.mjs");
-  new MontageConfigApp().render(true);
+  try {
+    const { MontageConfigApp } = await import("./apps/montage-config.mjs");
+    new MontageConfigApp().render({ force: true });
+  } catch (err) {
+    console.error(`${MODULE_ID} | Failed to open config`, err);
+  }
 }

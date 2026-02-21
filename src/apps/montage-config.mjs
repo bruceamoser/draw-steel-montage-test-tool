@@ -223,6 +223,6 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
 
     // Open the GM tracker
     const { MontageTrackerGMApp } = await import("./montage-tracker-gm.mjs");
-    new MontageTrackerGMApp().render(true);
+    new MontageTrackerGMApp().render({ force: true });
   }
 }

@@ -86,7 +86,7 @@ export class MontageAPI {
    */
   async openGMTracker() {
     const { MontageTrackerGMApp } = await import("../apps/montage-tracker-gm.mjs");
-    new MontageTrackerGMApp().render(true);
+    new MontageTrackerGMApp().render({ force: true });
   }
 
   /**
@@ -94,7 +94,7 @@ export class MontageAPI {
    */
   async openPlayerTracker() {
     const { MontageTrackerPlayerApp } = await import("../apps/montage-tracker-player.mjs");
-    new MontageTrackerPlayerApp().render(true);
+    new MontageTrackerPlayerApp().render({ force: true });
   }
 
   /**
@@ -104,6 +104,6 @@ export class MontageAPI {
   async openConfig() {
     if (!game.user.isGM) throw new Error("Only the GM can open the config.");
     const { MontageConfigApp } = await import("../apps/montage-config.mjs");
-    new MontageConfigApp().render(true);
+    new MontageConfigApp().render({ force: true });
   }
 }
