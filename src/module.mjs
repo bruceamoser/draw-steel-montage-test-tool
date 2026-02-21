@@ -1,7 +1,7 @@
 /**
  * Draw Steel Montage Test Tool
  * Main module entry point — registers hooks, socket, settings, and scene controls.
- * v0.3.4
+ * v0.3.5
  */
 import { MODULE_ID, SYSTEM_ID } from "./config.mjs";
 import { MontageAPI } from "./api/montage-api.mjs";
@@ -123,7 +123,12 @@ function _ensureMontageTestAllowedItemType() {
   // Also patch the document class metadata types list if present.
   try {
     const metaTypes = CONFIG.Item?.documentClass?.metadata?.types;
-    if (Array.isArray(metaTypes) && !metaTypes.includes(type)) {
+    if (metaTypes instanceof Set) {
+      if (!metaTypes.has(type)) {
+        metaTypes.add(type);
+        changed = true;
+      }
+    } else if (Array.isArray(metaTypes) && !metaTypes.includes(type)) {
       const mutated = _ensureTypeInList("CONFIG.Item.documentClass.metadata.types", metaTypes, type);
       if (!mutated) {
         try {
