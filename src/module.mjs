@@ -1,7 +1,7 @@
 /**
  * Draw Steel Montage Test Tool
  * Main module entry point — registers hooks, socket, settings, and scene controls.
- * v0.3.5
+ * v0.3.6
  */
 import { MODULE_ID, SYSTEM_ID } from "./config.mjs";
 import { MontageAPI } from "./api/montage-api.mjs";
@@ -29,7 +29,8 @@ function _ensureTypeInList(listOwnerLabel, list, type) {
 
 function _coerceTypesToArray(types) {
   if (!types) return [];
-  if (Array.isArray(types)) return types;
+  // Always return a NEW array so we can safely push/mutate without hitting frozen-array errors.
+  if (Array.isArray(types)) return [...types];
   if (types instanceof Set) return Array.from(types);
   if (typeof types === "object") return Object.keys(types);
   return [];
@@ -159,9 +160,39 @@ function _ensureMontageTestAllowedItemType() {
   }
 }
 
-/* ---------------------------------------- */
-/*  System validation                       */
-/* ---------------------------------------- */
+const _VALIDATE_PATCHED = Symbol.for(`${MODULE_ID}.patchedValidate`);
+
+/**
+ * Safety-net: wrap the Item document class's instance validate() method so that
+ * a "not a valid type" error for our custom type is never surfaced.  Foundry's
+ * TYPES array may be frozen by the time we try to mutate it; this ensures the
+ * data-model validation step cannot block montageTest item creation.
+ */
+function _patchDocumentClassValidate() {
+  const cls = CONFIG.Item?.documentClass;
+  if (!cls?.prototype || cls.prototype[_VALIDATE_PATCHED]) return;
+
+  const original = cls.prototype.validate;
+  if (typeof original !== "function") return;
+
+  const type = MONTAGE_TEST_ITEM_TYPE;
+  cls.prototype.validate = function patchedValidate(data, options) {
+    // If this document (or the to-be-created data) uses our custom type, ensure
+    // the TYPES list visible to this call includes it so validation passes.
+    const docType = data?.type ?? this._source?.type ?? this.type;
+    if (docType === type) {
+      // Temporarily add our type to the constructor's TYPES if it's missing.
+      const types = this.constructor.TYPES;
+      if (Array.isArray(types) && !types.includes(type) && !Object.isFrozen(types)) {
+        types.push(type);
+      }
+    }
+    return original.call(this, data, options);
+  };
+  cls.prototype.validate[_VALIDATE_PATCHED] = true;
+}
+
+
 let _systemValid = false;
 
 /* ---------------------------------------- */
@@ -179,6 +210,9 @@ Hooks.once("init", () => {
 
   // Ensure the type is visible/creatable in Draw Steel's custom create dialog.
   _ensureMontageTestAllowedItemType();
+
+  // Safety-net: wrap validate() so our type is never rejected by frozen TYPES arrays.
+  _patchDocumentClassValidate();
 
   // Register default sheet
   const sheetConfig = foundry.applications?.sheets?.DocumentSheetConfig ?? globalThis.DocumentSheetConfig;
