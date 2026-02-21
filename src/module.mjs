@@ -1,7 +1,7 @@
 /**
  * Draw Steel Montage Test Tool
  * Main module entry point — registers hooks, socket, settings, and scene controls.
- * v0.3.6
+ * v0.3.7
  */
 import { MODULE_ID, SYSTEM_ID } from "./config.mjs";
 import { MontageAPI } from "./api/montage-api.mjs";
@@ -10,55 +10,75 @@ import { MontageTestSheet } from "./items/montage-test-sheet.mjs";
 
 const log = (...args) => console.log(`${MODULE_ID} |`, ...args);
 
+/* ---------------------------------------- */
+/*  Type Registration Helpers               */
+/* ---------------------------------------- */
+
+const _DOC_TYPE_FIELD_PATCHED = Symbol.for(`${MODULE_ID}.patchedDocTypeField`);
+
+/**
+ * Patch foundry.data.fields.DocumentTypeField._validateType so that our custom
+ * item type is always accepted, regardless of which frozen list Foundry built
+ * before modules were initialised.  This is the most precise fix because that
+ * method is the single code-path that throws the "not a valid type" error.
+ */
+function _patchDocumentTypeFieldValidation() {
+  const type = MONTAGE_TEST_ITEM_TYPE;
+  const DocumentTypeField = foundry.data?.fields?.DocumentTypeField;
+  if (!DocumentTypeField?.prototype || DocumentTypeField.prototype[_DOC_TYPE_FIELD_PATCHED]) return;
+
+  const original = DocumentTypeField.prototype._validateType;
+  if (typeof original !== "function") return;
+
+  DocumentTypeField.prototype._validateType = function patchedDTFValidateType(value, options) {
+    // If the value is our custom item type, skip validation entirely — our
+    // TypeDataModel is responsible for validating its own system fields.
+    if (value === type && (!this.documentClass || this.documentClass.documentName === "Item")) return;
+    return original.call(this, value, options);
+  };
+  DocumentTypeField.prototype[_DOC_TYPE_FIELD_PATCHED] = true;
+  log(`Patched DocumentTypeField._validateType to allow ${type}`);
+}
+
 const _TYPES_PATCHED = Symbol.for(`${MODULE_ID}.patchedItemTypes`);
 
-function _ensureTypeInList(listOwnerLabel, list, type) {
-  if (!Array.isArray(list) || list.includes(type)) return false;
-  try {
-    if (!Object.isFrozen(list)) {
-      list.push(type);
-      return true;
-    }
-  } catch {
-    // fall through to reassignment attempts
-  }
-  // For frozen arrays (or push failures), callers should attempt reassignment.
-  log(`Could not mutate ${listOwnerLabel} in-place; will try reassignment.`);
-  return false;
-}
-
-function _coerceTypesToArray(types) {
-  if (!types) return [];
-  // Always return a NEW array so we can safely push/mutate without hitting frozen-array errors.
-  if (Array.isArray(types)) return [...types];
-  if (types instanceof Set) return Array.from(types);
-  if (typeof types === "object") return Object.keys(types);
-  return [];
-}
-
+/**
+ * Override DrawSteelItem.TYPES (the static getter used by createDialog) to
+ * include montageTest so it appears in the Create Item dropdown.
+ */
 function _patchItemDocumentClassTypes() {
   const type = MONTAGE_TEST_ITEM_TYPE;
   const cls = CONFIG.Item?.documentClass;
   if (!cls || cls[_TYPES_PATCHED]) return false;
 
-  // Find inherited TYPES getter so we can call it.
+  // Walk up to find any existing TYPES getter so we can call through to it.
   let owner = cls;
-  while (owner && !Object.prototype.hasOwnProperty.call(owner, "TYPES")) owner = Object.getPrototypeOf(owner);
-  const originalGetter = owner ? Object.getOwnPropertyDescriptor(owner, "TYPES")?.get : null;
+  while (owner && !Object.prototype.hasOwnProperty.call(owner, "TYPES")) {
+    owner = Object.getPrototypeOf(owner);
+  }
+  const originalDescriptor = owner ? Object.getOwnPropertyDescriptor(owner, "TYPES") : null;
+  const originalGetter = originalDescriptor?.get ?? null;
+  const originalValue  = !originalGetter ? originalDescriptor?.value : null;
 
   Object.defineProperty(cls, "TYPES", {
     configurable: true,
     get() {
-      let baseTypes;
+      let base;
       try {
-        baseTypes = originalGetter ? originalGetter.call(this) : [];
+        base = originalGetter ? originalGetter.call(this)
+          : Array.isArray(originalValue) ? originalValue
+          : originalValue instanceof Set  ? Array.from(originalValue)
+          : originalValue != null          ? Object.keys(originalValue)
+          : [];
       } catch {
-        baseTypes = [];
+        base = [];
       }
-
-      const typesArr = _coerceTypesToArray(baseTypes);
-      if (!typesArr.includes(type)) typesArr.push(type);
-      return typesArr;
+      // Normalise to a fresh mutable array.
+      const arr = Array.isArray(base) ? [...base]
+        : base instanceof Set          ? Array.from(base)
+        : Object.keys(base ?? {});
+      if (!arr.includes(type)) arr.push(type);
+      return arr;
     },
   });
 
@@ -66,130 +86,49 @@ function _patchItemDocumentClassTypes() {
   return true;
 }
 
+/**
+ * Try every known location where Foundry / Draw Steel maintain the list of
+ * allowed item types, and add montageTest to each one.  Some lists are frozen
+ * by the time module init runs; _patchDocumentTypeFieldValidation is the
+ * authoritative safety-net when these mutations fail.
+ */
 function _ensureMontageTestAllowedItemType() {
   const type = MONTAGE_TEST_ITEM_TYPE;
-  let changed = false;
 
-  // Foundry's authoritative list for document type creation/UI.
+  // 1. game.documentTypes.Item
   try {
     const docTypes = game.documentTypes?.Item;
-    if (docTypes instanceof Set) {
-      if (!docTypes.has(type)) {
-        docTypes.add(type);
-        changed = true;
-      }
-    } else if (Array.isArray(docTypes) && !docTypes.includes(type)) {
-      const mutated = _ensureTypeInList("game.documentTypes.Item", docTypes, type);
-      if (!mutated) {
-        // Try reassignment (some environments freeze the array).
-        try {
-          if (game.documentTypes) game.documentTypes.Item = [...docTypes, type];
-          changed = true;
-        } catch {
-          // ignore
-        }
-      } else {
-        changed = true;
-      }
+    if (docTypes instanceof Set && !docTypes.has(type))       docTypes.add(type);
+    else if (Array.isArray(docTypes) && !docTypes.includes(type)) {
+      if (!Object.isFrozen(docTypes)) docTypes.push(type);
+      else try { game.documentTypes.Item = [...docTypes, type]; } catch { /* ignore */ }
     }
-  } catch {
-    // ignore
-  }
+  } catch { /* ignore */ }
 
-  // System-declared list (many systems validate against this).
+  // 2. game.system.documentTypes.Item
   try {
     const sysTypes = game.system?.documentTypes?.Item;
-    if (sysTypes instanceof Set) {
-      if (!sysTypes.has(type)) {
-        sysTypes.add(type);
-        changed = true;
-      }
-    } else if (Array.isArray(sysTypes) && !sysTypes.includes(type)) {
-      const mutated = _ensureTypeInList("game.system.documentTypes.Item", sysTypes, type);
-      if (!mutated) {
-        try {
-          if (game.system?.documentTypes) game.system.documentTypes.Item = [...sysTypes, type];
-          changed = true;
-        } catch {
-          // ignore
-        }
-      } else {
-        changed = true;
-      }
+    if (sysTypes instanceof Set && !sysTypes.has(type))       sysTypes.add(type);
+    else if (Array.isArray(sysTypes) && !sysTypes.includes(type)) {
+      if (!Object.isFrozen(sysTypes)) sysTypes.push(type);
+      else try { game.system.documentTypes.Item = [...sysTypes, type]; } catch { /* ignore */ }
     }
-  } catch {
-    // ignore
-  }
+  } catch { /* ignore */ }
 
-  // Also patch the document class metadata types list if present.
+  // 3. CONFIG.Item.documentClass.metadata.types (often a Set in Foundry v13)
   try {
     const metaTypes = CONFIG.Item?.documentClass?.metadata?.types;
-    if (metaTypes instanceof Set) {
-      if (!metaTypes.has(type)) {
-        metaTypes.add(type);
-        changed = true;
-      }
-    } else if (Array.isArray(metaTypes) && !metaTypes.includes(type)) {
-      const mutated = _ensureTypeInList("CONFIG.Item.documentClass.metadata.types", metaTypes, type);
-      if (!mutated) {
-        try {
-          if (CONFIG.Item?.documentClass?.metadata) {
-            CONFIG.Item.documentClass.metadata.types = [...metaTypes, type];
-            changed = true;
-          }
-        } catch {
-          // ignore
-        }
-      } else {
-        changed = true;
-      }
+    if (metaTypes instanceof Set && !metaTypes.has(type))       metaTypes.add(type);
+    else if (Array.isArray(metaTypes) && !metaTypes.includes(type)) {
+      if (!Object.isFrozen(metaTypes)) metaTypes.push(type);
+      else try { CONFIG.Item.documentClass.metadata.types = [...metaTypes, type]; } catch { /* ignore */ }
     }
-  } catch {
-    // ignore
-  }
+  } catch { /* ignore */ }
 
-  // Draw Steel's create dialog pulls options from DrawSteelItem.TYPES.
-  try {
-    if (_patchItemDocumentClassTypes()) changed = true;
-  } catch {
-    // ignore
-  }
+  // 4. Patch the TYPES static getter so the Create Item dialog lists our type.
+  try { _patchItemDocumentClassTypes(); } catch { /* ignore */ }
 
-  if (changed) {
-    log(`Registered allowed Item type: ${type}`);
-  }
-}
-
-const _VALIDATE_PATCHED = Symbol.for(`${MODULE_ID}.patchedValidate`);
-
-/**
- * Safety-net: wrap the Item document class's instance validate() method so that
- * a "not a valid type" error for our custom type is never surfaced.  Foundry's
- * TYPES array may be frozen by the time we try to mutate it; this ensures the
- * data-model validation step cannot block montageTest item creation.
- */
-function _patchDocumentClassValidate() {
-  const cls = CONFIG.Item?.documentClass;
-  if (!cls?.prototype || cls.prototype[_VALIDATE_PATCHED]) return;
-
-  const original = cls.prototype.validate;
-  if (typeof original !== "function") return;
-
-  const type = MONTAGE_TEST_ITEM_TYPE;
-  cls.prototype.validate = function patchedValidate(data, options) {
-    // If this document (or the to-be-created data) uses our custom type, ensure
-    // the TYPES list visible to this call includes it so validation passes.
-    const docType = data?.type ?? this._source?.type ?? this.type;
-    if (docType === type) {
-      // Temporarily add our type to the constructor's TYPES if it's missing.
-      const types = this.constructor.TYPES;
-      if (Array.isArray(types) && !types.includes(type) && !Object.isFrozen(types)) {
-        types.push(type);
-      }
-    }
-    return original.call(this, data, options);
-  };
-  cls.prototype.validate[_VALIDATE_PATCHED] = true;
+  log(`Registered allowed Item type: ${type}`);
 }
 
 
@@ -208,11 +147,14 @@ Hooks.once("init", () => {
   CONFIG.Item.typeLabels[MONTAGE_TEST_ITEM_TYPE] = "MONTAGE.Item.MontageTest";
   CONFIG.Item.dataModels[MONTAGE_TEST_ITEM_TYPE] = MontageTestDataModel;
 
-  // Ensure the type is visible/creatable in Draw Steel's custom create dialog.
-  _ensureMontageTestAllowedItemType();
+  // Patch DocumentTypeField._validateType so Foundry core field validation
+  // never rejects montageTest regardless of which frozen list was built before
+  // modules ran.  This must happen before any Item.create() call.
+  _patchDocumentTypeFieldValidation();
 
-  // Safety-net: wrap validate() so our type is never rejected by frozen TYPES arrays.
-  _patchDocumentClassValidate();
+  // Also try to directly register in every known type list (helps with the
+  // Create Item dialog and any list-based checks outside the field validator).
+  _ensureMontageTestAllowedItemType();
 
   // Register default sheet
   const sheetConfig = foundry.applications?.sheets?.DocumentSheetConfig ?? globalThis.DocumentSheetConfig;
@@ -239,14 +181,21 @@ Hooks.once("init", () => {
 });
 
 /* ---------------------------------------- */
+/*  Setup Hook (after system init)          */
+/* ---------------------------------------- */
+Hooks.once("setup", () => {
+  if (!_systemValid) return;
+  // By the time "setup" fires the system has finished populating
+  // game.documentTypes. Re-run patches so the lists include our type.
+  _patchDocumentTypeFieldValidation();
+  _ensureMontageTestAllowedItemType();
+});
+
+/* ---------------------------------------- */
 /*  Ready Hook                              */
 /* ---------------------------------------- */
 Hooks.once("ready", () => {
   if (!_systemValid) return;
-
-  // Some systems populate/finalize document types later in the init lifecycle.
-  // Re-run the allowance patch at ready so the Create Item dialog can see it.
-  _ensureMontageTestAllowedItemType();
 
   // Expose public API
   const moduleInstance = game.modules.get(MODULE_ID);
