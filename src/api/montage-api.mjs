@@ -17,10 +17,16 @@ export class MontageAPI {
   async createMontageTest(options = {}) {
     if (!game.user.isGM) throw new Error("Only the GM can create a montage test.");
 
-    const item = await Item.create({
-      name: options.name ?? game.i18n.localize("MONTAGE.Item.DefaultName"),
-      type: MONTAGE_TEST_ITEM_TYPE,
-    });
+    let item;
+    try {
+      item = await Item.create({
+        name: options.name ?? game.i18n.localize("MONTAGE.Item.DefaultName"),
+        type: MONTAGE_TEST_ITEM_TYPE,
+      });
+    } catch (err) {
+      ui.notifications?.error?.(`Failed to create Montage Test item: ${err?.message ?? err}`);
+      throw err;
+    }
 
     if (options.renderSheet) item?.sheet?.render(true);
     return item;

@@ -1,7 +1,7 @@
 /**
  * Draw Steel Montage Test Tool
  * Main module entry point — registers hooks, socket, settings, and scene controls.
- * v0.3.0
+ * v0.3.2
  */
 import { MODULE_ID, SYSTEM_ID } from "./config.mjs";
 import { MontageAPI } from "./api/montage-api.mjs";
@@ -22,6 +22,29 @@ Hooks.once("init", () => {
   if (game.system?.id !== SYSTEM_ID) return;
   _systemValid = true;
 
+  // Ensure the system allows this Item type to be created.
+  // Many systems define an explicit list in `game.system.documentTypes.Item`.
+  // If the type isn't in that list, Item.create({type}) will throw.
+  try {
+    const docTypes = game.system?.documentTypes?.Item;
+    if (Array.isArray(docTypes) && !docTypes.includes(MONTAGE_TEST_ITEM_TYPE)) {
+      docTypes.push(MONTAGE_TEST_ITEM_TYPE);
+    }
+  } catch {
+    // If the list is read-only for some reason, we fall back to metadata patching below.
+  }
+
+  // Also patch the document class metadata types list if present.
+  // Foundry uses this for validation and some UI listings.
+  try {
+    const metaTypes = CONFIG.Item?.documentClass?.metadata?.types;
+    if (Array.isArray(metaTypes) && !metaTypes.includes(MONTAGE_TEST_ITEM_TYPE)) {
+      metaTypes.push(MONTAGE_TEST_ITEM_TYPE);
+    }
+  } catch {
+    // ignore
+  }
+
   // Register the custom Item type + data model
   CONFIG.Item.typeLabels ??= {};
   CONFIG.Item.dataModels ??= {};
@@ -29,15 +52,9 @@ Hooks.once("init", () => {
   CONFIG.Item.dataModels[MONTAGE_TEST_ITEM_TYPE] = MontageTestDataModel;
 
   // Register default sheet
-  const sheetConfig = foundry.applications?.sheets?.DocumentSheetConfig;
+  const sheetConfig = foundry.applications?.sheets?.DocumentSheetConfig ?? globalThis.DocumentSheetConfig;
   if (sheetConfig?.registerSheet) {
     sheetConfig.registerSheet(Item, MODULE_ID, MontageTestSheet, {
-      types: [MONTAGE_TEST_ITEM_TYPE],
-      makeDefault: true,
-      label: "MONTAGE.Item.MontageTest",
-    });
-  } else {
-    Items.registerSheet(MODULE_ID, MontageTestSheet, {
       types: [MONTAGE_TEST_ITEM_TYPE],
       makeDefault: true,
       label: "MONTAGE.Item.MontageTest",

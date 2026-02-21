@@ -10,11 +10,13 @@ import {
   computeOutcome,
 } from "./montage-test-model.mjs";
 
+const ItemSheetV1 = foundry.appv1?.sheets?.ItemSheet ?? ItemSheet;
+
 /**
  * Minimal ItemSheet implementation for Foundry v13.
  * Uses a Handlebars template and simple action handlers for array editing.
  */
-export class MontageTestSheet extends ItemSheet {
+export class MontageTestSheet extends ItemSheetV1 {
 
   /** @override */
   static get defaultOptions() {
