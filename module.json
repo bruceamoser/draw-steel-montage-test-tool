@@ -44,5 +44,10 @@
   "download": "https://github.com/bruceamoser/draw-steel-montage-test-tool/releases/download/v#{VERSION}#/draw-steel-montage.zip",
   "bugs": "https://github.com/bruceamoser/draw-steel-montage-test-tool/issues",
   "license": "LICENSE",
-  "flags": {}
+  "flags": {},
+  "documentTypes": {
+    "Item": {
+      "montageTest": {}
+    }
+  }
 }
