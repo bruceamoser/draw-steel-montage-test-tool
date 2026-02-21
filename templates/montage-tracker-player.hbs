@@ -1,0 +1,134 @@
+{{#if hasTest}}
+{{#if isActive}}
+{{#if hasHero}}
+<section class="montage-tracker-player">
+  {{!-- Header --}}
+  <header class="montage-tracker-header">
+    <h2>{{testName}}</h2>
+    <div class="montage-meta">
+      <span class="montage-badge montage-difficulty-{{test.difficulty}}">{{difficultyLabel}}</span>
+      <span class="montage-badge">{{localize "MONTAGE.Tracker.Round"}} {{currentRound}} / {{maxRounds}}</span>
+    </div>
+  </header>
+
+  {{!-- Progress Bars --}}
+  <div class="montage-progress-section">
+    <div class="montage-progress-group">
+      <label class="montage-progress-label montage-success-label">
+        {{localize "MONTAGE.Tracker.Successes"}}: {{currentSuccesses}} / {{successLimit}}
+      </label>
+      <div class="montage-progress-bar">
+        <div class="montage-progress-fill montage-success-fill" style="width: {{successPct}}%"></div>
+      </div>
+    </div>
+    <div class="montage-progress-group">
+      <label class="montage-progress-label montage-failure-label">
+        {{localize "MONTAGE.Tracker.Failures"}}: {{currentFailures}} / {{failureLimit}}
+      </label>
+      <div class="montage-progress-bar">
+        <div class="montage-progress-fill montage-failure-fill" style="width: {{failurePct}}%"></div>
+      </div>
+    </div>
+  </div>
+
+  {{!-- Active Complications --}}
+  {{#if hasComplications}}
+  <div class="montage-complications-player">
+    <h3><i class="fa-solid fa-triangle-exclamation"></i> {{localize "MONTAGE.Tracker.ActiveComplications"}}</h3>
+    <ul>
+      {{#each activeComplications}}
+      <li>{{this.description}}</li>
+      {{/each}}
+    </ul>
+  </div>
+  {{/if}}
+
+  {{!-- Hero Info --}}
+  <div class="montage-hero-banner">
+    <img src="{{heroImg}}" alt="{{heroName}}" class="montage-hero-portrait" />
+    <h3>{{heroName}}</h3>
+  </div>
+
+  {{!-- Action Selection --}}
+  {{#if canAct}}
+  <form class="montage-action-form" autocomplete="off">
+    <input type="hidden" name="actorId" value="{{actorId}}" />
+
+    <div class="form-group">
+      <label for="actionType">{{localize "MONTAGE.Player.ChooseAction"}}</label>
+      <select name="actionType">
+        {{#each actionTypes}}
+        <option value="{{this.value}}">{{this.label}}</option>
+        {{/each}}
+      </select>
+    </div>
+
+    <div class="form-group aid-target-group" style="display: none;">
+      <label for="aidTarget">{{localize "MONTAGE.Player.AidTarget"}}</label>
+      <select name="aidTarget">
+        <option value="">— {{localize "MONTAGE.Player.SelectTarget"}} —</option>
+        {{#each otherHeroes}}
+        <option value="{{this.actorId}}">{{this.name}}</option>
+        {{/each}}
+      </select>
+    </div>
+
+    <div class="form-group stacked">
+      <label for="description">{{localize "MONTAGE.Player.Description"}}</label>
+      <textarea name="description" rows="2" placeholder="{{localize 'MONTAGE.Player.DescriptionPlaceholder'}}"></textarea>
+    </div>
+
+    <button type="submit" class="montage-btn-primary">
+      <i class="fa-solid fa-paper-plane"></i> {{localize "MONTAGE.Player.Submit"}}
+    </button>
+  </form>
+
+  {{else if hasPending}}
+  <div class="montage-waiting">
+    <i class="fa-solid fa-hourglass-half fa-2x montage-spin"></i>
+    <p>{{localize "MONTAGE.Player.WaitingApproval"}}</p>
+    <p class="notes">{{localize "MONTAGE.Player.SubmittedAs"}} <strong>{{pendingType}}</strong></p>
+  </div>
+
+  {{else if hasActed}}
+  <div class="montage-waiting">
+    <i class="fa-solid fa-check-circle fa-2x montage-done-icon"></i>
+    <p>{{localize "MONTAGE.Player.AlreadyActed"}}</p>
+  </div>
+  {{/if}}
+
+  {{!-- Past Actions --}}
+  {{#if hasPastActions}}
+  <section class="montage-past-actions">
+    <h3>{{localize "MONTAGE.Player.PreviousActions"}}</h3>
+    {{#each pastActions}}
+    <div class="montage-past-action {{#if this.isSuccess}}action-success{{else}}action-failure{{/if}}">
+      <span class="montage-past-round">R{{this.roundNumber}}</span>
+      <span class="montage-past-type">{{this.typeLabel}}</span>
+      <span class="montage-past-outcome">{{this.outcomeLabel}}</span>
+    </div>
+    {{/each}}
+  </section>
+  {{/if}}
+</section>
+
+{{else}}
+{{!-- Player has no hero in this test --}}
+<div class="montage-no-hero">
+  <p>{{localize "MONTAGE.Player.NoHero"}}</p>
+</div>
+{{/if}}
+
+{{else}}
+{{!-- Test exists but isn't active --}}
+<div class="montage-not-active">
+  <p>{{localize "MONTAGE.Player.TestNotActive"}}</p>
+</div>
+{{/if}}
+
+{{else}}
+{{!-- No test at all --}}
+<div class="montage-no-test">
+  <p>{{localize "MONTAGE.Player.NoTest"}}</p>
+</div>
+{{/if}}

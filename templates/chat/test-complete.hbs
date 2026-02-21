@@ -1,0 +1,29 @@
+<div class="montage-chat montage-test-complete">
+  <header>
+    <h3>
+      <i class="fa-solid fa-flag-checkered"></i>
+      {{testName}} — {{localize "MONTAGE.Chat.TestComplete"}}
+    </h3>
+  </header>
+
+  <div class="montage-chat-outcome montage-outcome-{{outcome}}">
+    <strong>{{outcomeLabel}}</strong>
+  </div>
+
+  <div class="montage-chat-final-tally">
+    <span class="montage-success-text">{{localize "MONTAGE.Tracker.Successes"}}: {{currentSuccesses}} / {{successLimit}}</span>
+    <span class="montage-failure-text">{{localize "MONTAGE.Tracker.Failures"}}: {{currentFailures}} / {{failureLimit}}</span>
+  </div>
+
+  {{#if victories}}
+  <div class="montage-chat-victories">
+    <i class="fa-solid fa-trophy"></i> {{localize "MONTAGE.Chat.Victories"}}: {{victories}}
+  </div>
+  {{/if}}
+
+  {{#if gmNotes}}
+  <div class="montage-chat-gm-notes">
+    <em>{{gmNotes}}</em>
+  </div>
+  {{/if}}
+</div>

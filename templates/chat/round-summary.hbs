@@ -1,0 +1,26 @@
+<div class="montage-chat montage-round-summary">
+  <header>
+    <h3>
+      <i class="fa-solid fa-mountain-sun"></i>
+      {{testName}} — {{localize "MONTAGE.Chat.RoundSummary"}} {{roundNumber}}
+    </h3>
+  </header>
+
+  <div class="montage-chat-progress">
+    <span class="montage-success-text">{{localize "MONTAGE.Tracker.Successes"}}: {{currentSuccesses}} / {{successLimit}}</span>
+    <span class="montage-failure-text">{{localize "MONTAGE.Tracker.Failures"}}: {{currentFailures}} / {{failureLimit}}</span>
+  </div>
+
+  {{#if actions.length}}
+  <ul class="montage-chat-actions">
+    {{#each actions}}
+    <li class="{{#if this.isSuccess}}chat-success{{else}}chat-failure{{/if}}">
+      <strong>{{this.heroName}}</strong>:
+      {{this.typeLabel}}
+      {{#if this.outcomeLabel}}— <em>{{this.outcomeLabel}}</em>{{/if}}
+      {{#if this.description}} ("{{this.description}}"){{/if}}
+    </li>
+    {{/each}}
+  </ul>
+  {{/if}}
+</div>

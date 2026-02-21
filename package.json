@@ -1,0 +1,19 @@
+{
+  "name": "draw-steel-montage",
+  "version": "1.0.0",
+  "description": "Foundry VTT module for building, tracking, and resolving Montage Tests in Draw Steel.",
+  "author": "bitTwiddleNinja",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bruceamoser/draw-steel-montage-test-tool.git"
+  },
+  "scripts": {
+    "lint": "eslint src/",
+    "build": "node scripts/package.mjs",
+    "package": "node scripts/package.mjs"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  }
+}

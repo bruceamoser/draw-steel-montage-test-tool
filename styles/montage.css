@@ -1,0 +1,842 @@
+/* ==========================================================================
+   Draw Steel Montage Test Tool — Styles
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Shared
+   -------------------------------------------------------------------------- */
+.montage-app {
+  --montage-success: #2e7d32;
+  --montage-failure: #c62828;
+  --montage-warning: #ef6c00;
+  --montage-info: #1565c0;
+  --montage-muted: #9e9e9e;
+  --montage-bg-dark: #1a1a2e;
+  --montage-bg-card: #16213e;
+  --montage-border: #0f3460;
+  --montage-text: #e0e0e0;
+  --montage-text-dim: #9e9e9e;
+  --montage-gold: #e2b714;
+  --montage-radius: 6px;
+}
+
+.montage-app .window-content {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--montage-text);
+}
+
+/* --------------------------------------------------------------------------
+   Hero Thumbnails
+   -------------------------------------------------------------------------- */
+.montage-hero-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--montage-border);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.montage-hero-portrait {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--montage-border);
+  object-fit: cover;
+}
+
+/* --------------------------------------------------------------------------
+   Badges
+   -------------------------------------------------------------------------- */
+.montage-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.montage-difficulty-easy {
+  background: var(--montage-success);
+  color: #fff;
+}
+
+.montage-difficulty-moderate {
+  background: var(--montage-warning);
+  color: #fff;
+}
+
+.montage-difficulty-hard {
+  background: var(--montage-failure);
+  color: #fff;
+}
+
+.montage-status-setup {
+  background: var(--montage-muted);
+  color: #fff;
+}
+
+.montage-status-active {
+  background: var(--montage-info);
+  color: #fff;
+}
+
+.montage-status-resolved {
+  background: var(--montage-gold);
+  color: #222;
+}
+
+/* --------------------------------------------------------------------------
+   Progress Bars
+   -------------------------------------------------------------------------- */
+.montage-progress-section {
+  margin: 8px 0;
+}
+
+.montage-progress-group {
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.montage-progress-label {
+  min-width: 140px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.montage-success-label {
+  color: var(--montage-success);
+}
+
+.montage-failure-label {
+  color: var(--montage-failure);
+}
+
+.montage-progress-bar {
+  flex: 1;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--montage-radius);
+  overflow: hidden;
+  min-width: 120px;
+}
+
+.montage-progress-fill {
+  height: 100%;
+  border-radius: var(--montage-radius);
+  transition: width 0.4s ease;
+}
+
+.montage-success-fill {
+  background: linear-gradient(90deg, #2e7d32, #4caf50);
+}
+
+.montage-failure-fill {
+  background: linear-gradient(90deg, #c62828, #ef5350);
+}
+
+.montage-tally-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.montage-tally-controls button {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 12px;
+  line-height: 26px;
+  text-align: center;
+  border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Tracker Header
+   -------------------------------------------------------------------------- */
+.montage-tracker-header {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.montage-tracker-header h2 {
+  margin: 0 0 4px;
+  border: none;
+  font-size: 18px;
+}
+
+.montage-meta {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* --------------------------------------------------------------------------
+   Outcome Display
+   -------------------------------------------------------------------------- */
+.montage-outcome {
+  text-align: center;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: var(--montage-radius);
+  border: 2px solid;
+}
+
+.montage-outcome-totalSuccess {
+  border-color: var(--montage-success);
+  background: rgba(46, 125, 50, 0.15);
+}
+
+.montage-outcome-partialSuccess {
+  border-color: var(--montage-warning);
+  background: rgba(239, 108, 0, 0.15);
+}
+
+.montage-outcome-totalFailure {
+  border-color: var(--montage-failure);
+  background: rgba(198, 40, 40, 0.15);
+}
+
+.montage-outcome h3 {
+  margin: 0;
+  border: none;
+  font-size: 16px;
+}
+
+.montage-outcome-notes {
+  font-style: italic;
+  margin-top: 4px;
+  color: var(--montage-text-dim);
+}
+
+.montage-resolved-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   Pending Actions (GM Approval Queue)
+   -------------------------------------------------------------------------- */
+.montage-pending-section {
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px dashed var(--montage-warning);
+  border-radius: var(--montage-radius);
+  background: rgba(239, 108, 0, 0.05);
+}
+
+.montage-pending-section h3 {
+  margin: 0 0 8px;
+  border: none;
+  font-size: 14px;
+  color: var(--montage-warning);
+}
+
+.montage-pending-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.montage-pending-item:last-child {
+  border-bottom: none;
+}
+
+.montage-pending-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.montage-pending-info .montage-action-type {
+  font-size: 11px;
+  color: var(--montage-text-dim);
+  text-transform: uppercase;
+}
+
+.montage-pending-info .montage-action-desc {
+  font-size: 12px;
+  color: var(--montage-text-dim);
+}
+
+.montage-pending-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.montage-pending-buttons button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 14px;
+}
+
+/* --------------------------------------------------------------------------
+   Complications
+   -------------------------------------------------------------------------- */
+.montage-complications-section {
+  margin: 8px 0;
+}
+
+.montage-complications-section h3 {
+  margin: 0 0 6px;
+  border: none;
+  font-size: 14px;
+  color: var(--montage-warning);
+}
+
+.montage-complication {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  background: rgba(239, 108, 0, 0.08);
+  border-radius: var(--montage-radius);
+  border-left: 3px solid var(--montage-warning);
+}
+
+.montage-complication.resolved {
+  opacity: 0.5;
+  border-left-color: var(--montage-muted);
+}
+
+.montage-complication-info {
+  flex: 1;
+}
+
+.montage-complication-info strong {
+  font-size: 13px;
+}
+
+.montage-complication-effect {
+  font-size: 11px;
+  color: var(--montage-text-dim);
+  margin: 2px 0 0;
+}
+
+/* --------------------------------------------------------------------------
+   Heroes Waiting
+   -------------------------------------------------------------------------- */
+.montage-heroes-section h3 {
+  margin: 0 0 6px;
+  border: none;
+  font-size: 14px;
+}
+
+.montage-heroes-waiting {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.montage-hero-waiting {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--montage-radius);
+  font-size: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   Round Actions
+   -------------------------------------------------------------------------- */
+.montage-round-actions {
+  margin: 8px 0;
+}
+
+.montage-round-actions h3 {
+  margin: 0 0 6px;
+  border: none;
+  font-size: 14px;
+}
+
+.montage-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.montage-action-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--montage-radius);
+  border-left: 3px solid var(--montage-muted);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.montage-action-entry.action-success {
+  border-left-color: var(--montage-success);
+}
+
+.montage-action-entry.action-failure {
+  border-left-color: var(--montage-failure);
+}
+
+.montage-action-entry.action-pending {
+  border-left-color: var(--montage-info);
+  opacity: 0.8;
+}
+
+.montage-action-details {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.montage-action-desc {
+  color: var(--montage-text-dim);
+  font-style: italic;
+}
+
+.montage-action-outcome {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.montage-aid-result {
+  color: var(--montage-info);
+  font-size: 11px;
+}
+
+.montage-awaiting-roll {
+  color: var(--montage-warning);
+  font-size: 11px;
+  font-style: italic;
+}
+
+.montage-enter-roll-btn {
+  font-size: 11px;
+  padding: 2px 8px;
+  margin-left: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Control Buttons
+   -------------------------------------------------------------------------- */
+.montage-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.montage-btn-primary {
+  background: var(--montage-info);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+}
+
+.montage-btn-primary:hover {
+  background: #1976d2;
+}
+
+.montage-btn-danger {
+  background: var(--montage-failure);
+  color: #fff;
+  border: none;
+}
+
+.montage-btn-danger:hover {
+  background: #d32f2f;
+}
+
+/* --------------------------------------------------------------------------
+   Config Form
+   -------------------------------------------------------------------------- */
+.montage-config h2 {
+  text-align: center;
+  border: none;
+  margin: 0 0 8px;
+}
+
+.montage-limits-display {
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--montage-radius);
+}
+
+.montage-limits-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.montage-limit-label {
+  font-size: 12px;
+  color: var(--montage-text-dim);
+}
+
+.montage-limit-value {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.montage-hero-selection {
+  margin: 8px 0;
+}
+
+.montage-hero-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.montage-hero-row .montage-hero-thumb {
+  width: 28px;
+  height: 28px;
+}
+
+.montage-complications {
+  margin: 8px 0;
+}
+
+.complication-entry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: flex-end;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.complication-entry .form-group {
+  flex: 1;
+  min-width: 120px;
+}
+
+.montage-remove-comp {
+  color: var(--montage-failure);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.montage-gm-notes {
+  margin: 8px 0;
+}
+
+.montage-gm-notes textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+/* --------------------------------------------------------------------------
+   Approval Dialog
+   -------------------------------------------------------------------------- */
+.montage-approval {
+  padding: 4px;
+}
+
+.montage-approval-hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--montage-radius);
+}
+
+.montage-approval-info h3 {
+  margin: 0;
+  border: none;
+}
+
+.montage-approval-description {
+  margin-bottom: 8px;
+}
+
+.montage-approval-description blockquote {
+  border-left: 3px solid var(--montage-info);
+  padding-left: 8px;
+  margin: 4px 0;
+  font-style: italic;
+  color: var(--montage-text-dim);
+}
+
+.montage-approval-value {
+  font-weight: 600;
+}
+
+.montage-approval-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   Player Tracker
+   -------------------------------------------------------------------------- */
+.montage-tracker-player {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.montage-hero-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--montage-radius);
+}
+
+.montage-hero-banner h3 {
+  margin: 0;
+  border: none;
+}
+
+.montage-action-form {
+  padding: 8px;
+  border: 1px solid var(--montage-border);
+  border-radius: var(--montage-radius);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.montage-action-form .form-group {
+  margin-bottom: 6px;
+}
+
+.montage-action-form textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.montage-waiting {
+  text-align: center;
+  padding: 20px;
+}
+
+.montage-spin {
+  animation: montage-pulse 1.5s ease-in-out infinite;
+  color: var(--montage-warning);
+}
+
+@keyframes montage-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.montage-done-icon {
+  color: var(--montage-success);
+}
+
+.montage-past-actions {
+  margin-top: 4px;
+}
+
+.montage-past-actions h3 {
+  margin: 0 0 6px;
+  border: none;
+  font-size: 14px;
+}
+
+.montage-past-action {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 8px;
+  margin-bottom: 3px;
+  border-radius: var(--montage-radius);
+  font-size: 12px;
+  border-left: 3px solid var(--montage-muted);
+}
+
+.montage-past-action.action-success {
+  border-left-color: var(--montage-success);
+}
+
+.montage-past-action.action-failure {
+  border-left-color: var(--montage-failure);
+}
+
+.montage-past-round {
+  font-weight: 700;
+  min-width: 24px;
+  color: var(--montage-text-dim);
+}
+
+.montage-past-type {
+  font-weight: 600;
+}
+
+.montage-past-outcome {
+  color: var(--montage-text-dim);
+  font-style: italic;
+}
+
+.montage-complications-player {
+  padding: 6px 8px;
+  background: rgba(239, 108, 0, 0.08);
+  border-radius: var(--montage-radius);
+  border-left: 3px solid var(--montage-warning);
+}
+
+.montage-complications-player h3 {
+  margin: 0 0 4px;
+  border: none;
+  font-size: 13px;
+  color: var(--montage-warning);
+}
+
+.montage-complications-player ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.montage-complications-player li {
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Chat Cards
+   -------------------------------------------------------------------------- */
+.montage-chat {
+  padding: 6px 8px;
+  border-radius: var(--montage-radius);
+  font-size: 12px;
+}
+
+.montage-chat header h3 {
+  margin: 0 0 6px;
+  border: none;
+  font-size: 14px;
+}
+
+.montage-round-summary {
+  border-left: 3px solid var(--montage-info);
+}
+
+.montage-test-complete {
+  border-left: 3px solid var(--montage-gold);
+}
+
+.montage-chat-progress {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.montage-success-text {
+  color: var(--montage-success);
+  font-weight: 600;
+}
+
+.montage-failure-text {
+  color: var(--montage-failure);
+  font-weight: 600;
+}
+
+.montage-chat-actions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.montage-chat-actions li {
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.montage-chat-actions li:last-child {
+  border-bottom: none;
+}
+
+.montage-chat-actions .chat-success {
+  border-left: 2px solid var(--montage-success);
+  padding-left: 6px;
+}
+
+.montage-chat-actions .chat-failure {
+  border-left: 2px solid var(--montage-failure);
+  padding-left: 6px;
+}
+
+.montage-chat-outcome {
+  text-align: center;
+  font-size: 16px;
+  margin: 8px 0;
+  padding: 8px;
+  border-radius: var(--montage-radius);
+}
+
+.montage-chat-outcome.montage-outcome-totalSuccess {
+  background: rgba(46, 125, 50, 0.15);
+  color: #4caf50;
+}
+
+.montage-chat-outcome.montage-outcome-partialSuccess {
+  background: rgba(239, 108, 0, 0.15);
+  color: #ff9800;
+}
+
+.montage-chat-outcome.montage-outcome-totalFailure {
+  background: rgba(198, 40, 40, 0.15);
+  color: #ef5350;
+}
+
+.montage-chat-final-tally {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+}
+
+.montage-chat-victories {
+  text-align: center;
+  margin: 6px 0;
+  color: var(--montage-gold);
+  font-weight: 700;
+}
+
+.montage-chat-gm-notes {
+  margin-top: 6px;
+  color: var(--montage-text-dim);
+  font-size: 11px;
+}
+
+/* --------------------------------------------------------------------------
+   No-content States
+   -------------------------------------------------------------------------- */
+.montage-no-test,
+.montage-no-hero,
+.montage-not-active,
+.montage-no-data {
+  text-align: center;
+  padding: 20px;
+  color: var(--montage-text-dim);
+}
+
+.montage-no-test button {
+  margin-top: 8px;
+}

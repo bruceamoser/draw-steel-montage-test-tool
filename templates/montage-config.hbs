@@ -1,0 +1,132 @@
+<form class="montage-config" autocomplete="off">
+  <h2>{{localize "MONTAGE.Config.Title"}}</h2>
+
+  {{!-- Test Name --}}
+  <div class="form-group">
+    <label for="testName">{{localize "MONTAGE.Config.TestName"}}</label>
+    <input type="text" name="testName" value="{{testName}}" placeholder="{{localize 'MONTAGE.Config.TestNamePlaceholder'}}" />
+  </div>
+
+  {{!-- Montage Difficulty --}}
+  <div class="form-group">
+    <label for="difficulty">{{localize "MONTAGE.Config.Difficulty"}}</label>
+    <select name="difficulty">
+      {{#each difficulties}}
+      <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+      {{/each}}
+    </select>
+  </div>
+
+  {{!-- Hero Count --}}
+  <div class="form-group">
+    <label for="heroCount">{{localize "MONTAGE.Config.HeroCount"}}</label>
+    <input type="number" name="heroCount" value="{{heroCount}}" min="1" max="20" />
+  </div>
+
+  {{!-- Calculated Limits --}}
+  <div class="form-group stacked montage-limits-display">
+    <label>{{localize "MONTAGE.Config.CalculatedLimits"}}</label>
+    <div class="montage-limits-row">
+      <span class="montage-limit-label">{{localize "MONTAGE.Config.SuccessLimit"}}:</span>
+      <span class="montage-limit-value" data-limit="success">{{successLimit}}</span>
+      <span class="montage-limit-label">{{localize "MONTAGE.Config.FailureLimit"}}:</span>
+      <span class="montage-limit-value" data-limit="failure">{{failureLimit}}</span>
+    </div>
+  </div>
+
+  {{!-- Manual Override --}}
+  <div class="form-group">
+    <label for="manualOverride">
+      <input type="checkbox" name="manualOverride" {{#if manualOverride}}checked{{/if}} />
+      {{localize "MONTAGE.Config.ManualOverride"}}
+    </label>
+  </div>
+
+  {{!-- Manual Limit Inputs (hidden by default) --}}
+  <div class="manual-limits" style="{{#unless manualOverride}}display:none{{/unless}}">
+    <div class="form-group">
+      <label for="customSuccessLimit">{{localize "MONTAGE.Config.CustomSuccessLimit"}}</label>
+      <input type="number" name="customSuccessLimit" value="{{successLimit}}" min="2" />
+    </div>
+    <div class="form-group">
+      <label for="customFailureLimit">{{localize "MONTAGE.Config.CustomFailureLimit"}}</label>
+      <input type="number" name="customFailureLimit" value="{{failureLimit}}" min="2" />
+    </div>
+  </div>
+
+  {{!-- Max Rounds --}}
+  <div class="form-group">
+    <label for="maxRounds">{{localize "MONTAGE.Config.MaxRounds"}}</label>
+    <input type="number" name="maxRounds" value="{{maxRounds}}" min="1" max="10" />
+  </div>
+
+  {{!-- Hero Selection --}}
+  <fieldset class="montage-hero-selection">
+    <legend>{{localize "MONTAGE.Config.SelectHeroes"}}</legend>
+    {{#each availableHeroes}}
+    <div class="form-group montage-hero-row">
+      <label>
+        <input type="checkbox" name="heroes" value="{{this.actorId}}" {{#if this.selected}}checked{{/if}} />
+        <img src="{{this.img}}" alt="{{this.name}}" class="montage-hero-thumb" />
+        <span>{{this.name}}</span>
+      </label>
+    </div>
+    {{/each}}
+    {{#unless availableHeroes.length}}
+    <p class="notes">{{localize "MONTAGE.Config.NoHeroes"}}</p>
+    {{/unless}}
+  </fieldset>
+
+  {{!-- Complications --}}
+  <fieldset class="montage-complications">
+    <legend>{{localize "MONTAGE.Config.Complications"}}</legend>
+    <div class="complication-list">
+      {{#each complications}}
+      <div class="complication-entry" data-index="{{@index}}">
+        <div class="form-group">
+          <label>{{localize "MONTAGE.Config.ComplicationDesc"}}</label>
+          <input type="text" name="complication-desc-{{@index}}" value="{{this.description}}" />
+        </div>
+        <div class="form-group">
+          <label>{{localize "MONTAGE.Config.TriggerRound"}}</label>
+          <input type="number" name="complication-round-{{@index}}" value="{{this.triggerRound}}" min="1" />
+        </div>
+        <div class="form-group">
+          <label>{{localize "MONTAGE.Config.ComplicationEffect"}}</label>
+          <input type="text" name="complication-effect-{{@index}}" value="{{this.effect}}" placeholder="{{localize 'MONTAGE.Config.ComplicationEffectPlaceholder'}}" />
+        </div>
+        <button type="button" class="montage-remove-comp" data-action="removeComplication" data-index="{{@index}}">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </div>
+      {{/each}}
+    </div>
+    <button type="button" data-action="addComplication">
+      <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Config.AddComplication"}}
+    </button>
+  </fieldset>
+
+  {{!-- GM Notes for Outcomes --}}
+  <fieldset class="montage-gm-notes">
+    <legend>{{localize "MONTAGE.Config.GMNotes"}}</legend>
+    <div class="form-group stacked">
+      <label for="noteTotalSuccess">{{localize "MONTAGE.Outcome.TotalSuccess"}}</label>
+      <textarea name="noteTotalSuccess" rows="2">{{gmNotes.totalSuccess}}</textarea>
+    </div>
+    <div class="form-group stacked">
+      <label for="notePartialSuccess">{{localize "MONTAGE.Outcome.PartialSuccess"}}</label>
+      <textarea name="notePartialSuccess" rows="2">{{gmNotes.partialSuccess}}</textarea>
+    </div>
+    <div class="form-group stacked">
+      <label for="noteTotalFailure">{{localize "MONTAGE.Outcome.TotalFailure"}}</label>
+      <textarea name="noteTotalFailure" rows="2">{{gmNotes.totalFailure}}</textarea>
+    </div>
+  </fieldset>
+
+  {{!-- Submit --}}
+  <footer class="sheet-footer flexrow">
+    <button type="submit">
+      <i class="fa-solid fa-play"></i> {{localize "MONTAGE.Config.CreateTest"}}
+    </button>
+  </footer>
+</form>

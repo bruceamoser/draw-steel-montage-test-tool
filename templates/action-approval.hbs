@@ -1,0 +1,74 @@
+{{#if hasData}}
+<form class="montage-approval" autocomplete="off">
+  <input type="hidden" name="actorId" value="{{actorId}}" />
+  <input type="hidden" name="heroName" value="{{heroName}}" />
+
+  {{!-- Hero & Action Info --}}
+  <div class="montage-approval-hero">
+    <img src="{{heroImg}}" alt="{{heroName}}" class="montage-hero-portrait" />
+    <div class="montage-approval-info">
+      <h3>{{heroName}}</h3>
+      <span class="montage-badge">{{actionTypeLabel}}</span>
+    </div>
+  </div>
+
+  {{!-- Player Description --}}
+  {{#if description}}
+  <div class="montage-approval-description">
+    <label>{{localize "MONTAGE.Approval.PlayerDescription"}}</label>
+    <blockquote>{{description}}</blockquote>
+  </div>
+  {{/if}}
+
+  {{!-- Aid Target --}}
+  {{#if aidTargetName}}
+  <div class="form-group">
+    <label>{{localize "MONTAGE.Approval.AidTarget"}}</label>
+    <span class="montage-approval-value">{{aidTargetName}}</span>
+  </div>
+  {{/if}}
+
+  {{!-- Test Difficulty Selector (for rolls and aid) --}}
+  {{#if needsDifficulty}}
+  <div class="form-group">
+    <label for="difficulty">{{localize "MONTAGE.Approval.TestDifficulty"}}</label>
+    <select name="difficulty">
+      {{#each difficulties}}
+      <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+      {{/each}}
+    </select>
+    <p class="notes">{{localize "MONTAGE.Approval.DifficultyHint"}}</p>
+  </div>
+  {{/if}}
+
+  {{!-- Auto-successes (for abilities) --}}
+  {{#if needsAutoSuccesses}}
+  <div class="form-group">
+    <label for="autoSuccesses">{{localize "MONTAGE.Approval.AutoSuccesses"}}</label>
+    <input type="number" name="autoSuccesses" value="1" min="0" max="5" />
+    <p class="notes">{{localize "MONTAGE.Approval.AutoSuccessesHint"}}</p>
+  </div>
+  {{/if}}
+
+  {{!-- GM Notes --}}
+  <div class="form-group stacked">
+    <label for="gmNotes">{{localize "MONTAGE.Approval.GMNotes"}}</label>
+    <textarea name="gmNotes" rows="2" placeholder="{{localize 'MONTAGE.Approval.GMNotesPlaceholder'}}"></textarea>
+  </div>
+
+  {{!-- Buttons --}}
+  <footer class="montage-approval-footer">
+    <button type="submit" class="montage-btn-primary">
+      <i class="fa-solid fa-check"></i> {{localize "MONTAGE.Approval.Approve"}}
+    </button>
+    <button type="button" data-action="reject" class="montage-btn-danger">
+      <i class="fa-solid fa-xmark"></i> {{localize "MONTAGE.Approval.Reject"}}
+    </button>
+  </footer>
+</form>
+
+{{else}}
+<div class="montage-no-data">
+  <p>{{localize "MONTAGE.Approval.NoPending"}}</p>
+</div>
+{{/if}}

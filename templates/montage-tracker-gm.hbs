@@ -1,0 +1,202 @@
+{{#if hasTest}}
+<section class="montage-tracker-gm">
+  {{!-- Header --}}
+  <header class="montage-tracker-header">
+    <h2>{{test.name}}</h2>
+    <div class="montage-meta">
+      <span class="montage-badge montage-difficulty-{{test.difficulty}}">{{difficultyLabel}}</span>
+      <span class="montage-badge">{{localize "MONTAGE.Tracker.Round"}} {{test.currentRound}} / {{test.maxRounds}}</span>
+      <span class="montage-badge montage-status-{{test.status}}">
+        {{#if isSetup}}{{localize "MONTAGE.Status.Setup"}}{{/if}}
+        {{#if isActive}}{{localize "MONTAGE.Status.Active"}}{{/if}}
+        {{#if isResolved}}{{localize "MONTAGE.Status.Resolved"}}{{/if}}
+      </span>
+    </div>
+  </header>
+
+  {{!-- Progress Bars --}}
+  <div class="montage-progress-section">
+    <div class="montage-progress-group">
+      <label class="montage-progress-label montage-success-label">
+        {{localize "MONTAGE.Tracker.Successes"}}: {{test.currentSuccesses}} / {{test.successLimit}}
+      </label>
+      <div class="montage-progress-bar">
+        <div class="montage-progress-fill montage-success-fill" style="width: {{successPct}}%"></div>
+      </div>
+      {{#if isActive}}
+      <div class="montage-tally-controls">
+        <button type="button" data-action="adjustSuccess" data-delta="-1" title="{{localize 'MONTAGE.Tracker.Decrease'}}">
+          <i class="fa-solid fa-minus"></i>
+        </button>
+        <button type="button" data-action="adjustSuccess" data-delta="1" title="{{localize 'MONTAGE.Tracker.Increase'}}">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+      {{/if}}
+    </div>
+
+    <div class="montage-progress-group">
+      <label class="montage-progress-label montage-failure-label">
+        {{localize "MONTAGE.Tracker.Failures"}}: {{test.currentFailures}} / {{test.failureLimit}}
+      </label>
+      <div class="montage-progress-bar">
+        <div class="montage-progress-fill montage-failure-fill" style="width: {{failurePct}}%"></div>
+      </div>
+      {{#if isActive}}
+      <div class="montage-tally-controls">
+        <button type="button" data-action="adjustFailure" data-delta="-1" title="{{localize 'MONTAGE.Tracker.Decrease'}}">
+          <i class="fa-solid fa-minus"></i>
+        </button>
+        <button type="button" data-action="adjustFailure" data-delta="1" title="{{localize 'MONTAGE.Tracker.Increase'}}">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+      {{/if}}
+    </div>
+  </div>
+
+  {{!-- Resolved Outcome --}}
+  {{#if isResolved}}
+  <div class="montage-outcome montage-outcome-{{test.outcome}}">
+    <h3>{{outcomeLabel}}</h3>
+    {{#if test.gmNotes.totalSuccess}}{{#if (eq test.outcome "totalSuccess")}}<p class="montage-outcome-notes">{{test.gmNotes.totalSuccess}}</p>{{/if}}{{/if}}
+    {{#if test.gmNotes.partialSuccess}}{{#if (eq test.outcome "partialSuccess")}}<p class="montage-outcome-notes">{{test.gmNotes.partialSuccess}}</p>{{/if}}{{/if}}
+    {{#if test.gmNotes.totalFailure}}{{#if (eq test.outcome "totalFailure")}}<p class="montage-outcome-notes">{{test.gmNotes.totalFailure}}</p>{{/if}}{{/if}}
+    <div class="montage-resolved-actions">
+      <button type="button" data-action="archiveTest">
+        <i class="fa-solid fa-box-archive"></i> {{localize "MONTAGE.Tracker.Archive"}}
+      </button>
+      <button type="button" data-action="newTest">
+        <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Tracker.NewTest"}}
+      </button>
+    </div>
+  </div>
+  {{/if}}
+
+  {{!-- Pending Actions (GM Approval Queue) --}}
+  {{#if hasPending}}
+  <section class="montage-pending-section">
+    <h3><i class="fa-solid fa-hourglass-half"></i> {{localize "MONTAGE.Tracker.PendingActions"}}</h3>
+    <div class="montage-pending-list">
+      {{#each pendingActions}}
+      <div class="montage-pending-item">
+        <img src="{{this.heroImg}}" alt="{{this.heroName}}" class="montage-hero-thumb" />
+        <div class="montage-pending-info">
+          <strong>{{this.heroName}}</strong>
+          <span class="montage-action-type">{{this.typeLabel}}</span>
+          {{#if this.description}}<em class="montage-action-desc">"{{this.description}}"</em>{{/if}}
+        </div>
+        <div class="montage-pending-buttons">
+          <button type="button" data-action="approveAction" data-actor-id="{{this.actorId}}" title="{{localize 'MONTAGE.Approval.Approve'}}">
+            <i class="fa-solid fa-check"></i>
+          </button>
+          <button type="button" data-action="rejectAction" data-actor-id="{{this.actorId}}" title="{{localize 'MONTAGE.Approval.Reject'}}">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+  </section>
+  {{/if}}
+
+  {{!-- Complications --}}
+  {{#if hasComplications}}
+  <section class="montage-complications-section">
+    <h3><i class="fa-solid fa-triangle-exclamation"></i> {{localize "MONTAGE.Tracker.Complications"}}</h3>
+    {{#each complications}}
+    {{#if this.isActive}}
+    <div class="montage-complication {{#if this.resolved}}resolved{{/if}}">
+      <div class="montage-complication-info">
+        <strong>{{this.description}}</strong>
+        {{#if this.effect}}<p class="montage-complication-effect">{{this.effect}}</p>{{/if}}
+      </div>
+      {{#unless this.resolved}}
+      <button type="button" data-action="resolveComplication" data-complication-id="{{this.id}}" title="{{localize 'MONTAGE.Tracker.ResolveComplication'}}">
+        <i class="fa-solid fa-check-circle"></i>
+      </button>
+      {{/unless}}
+    </div>
+    {{/if}}
+    {{/each}}
+  </section>
+  {{/if}}
+
+  {{!-- Heroes Waiting --}}
+  {{#if isActive}}
+  <section class="montage-heroes-section">
+    <h3>{{localize "MONTAGE.Tracker.HeroesWaiting"}}</h3>
+    {{#if heroesWaiting.length}}
+    <div class="montage-heroes-waiting">
+      {{#each heroesWaiting}}
+      <div class="montage-hero-waiting">
+        <img src="{{this.heroImg}}" alt="{{this.name}}" class="montage-hero-thumb" />
+        <span>{{this.name}}</span>
+      </div>
+      {{/each}}
+    </div>
+    {{else}}
+    <p class="notes">{{localize "MONTAGE.Tracker.AllActed"}}</p>
+    {{/if}}
+  </section>
+  {{/if}}
+
+  {{!-- Current Round Actions --}}
+  {{#if roundActions.length}}
+  <section class="montage-round-actions">
+    <h3>{{localize "MONTAGE.Tracker.RoundActions"}}</h3>
+    <div class="montage-action-list">
+      {{#each roundActions}}
+      <div class="montage-action-entry {{#if this.isSuccess}}action-success{{else}}action-failure{{/if}} {{#unless this.resolved}}action-pending{{/unless}}">
+        <img src="{{this.heroImg}}" alt="{{this.heroName}}" class="montage-hero-thumb" />
+        <div class="montage-action-details">
+          <strong>{{this.heroName}}</strong> — {{this.typeLabel}}
+          {{#if this.description}}<span class="montage-action-desc">"{{this.description}}"</span>{{/if}}
+          {{#if this.resolved}}
+          <span class="montage-action-outcome">{{this.outcomeLabel}}</span>
+          {{#if this.aidResultLabel}}<span class="montage-aid-result">({{this.aidResultLabel}})</span>{{/if}}
+          {{else}}
+          {{#if this.approved}}
+          <span class="montage-awaiting-roll">{{localize "MONTAGE.Tracker.AwaitingRoll"}}</span>
+          <button type="button" data-action="enterRollResult" data-actor-id="{{this.actorId}}" class="montage-enter-roll-btn">
+            <i class="fa-solid fa-dice"></i> {{localize "MONTAGE.Roll.Enter"}}
+          </button>
+          {{/if}}
+          {{/if}}
+        </div>
+      </div>
+      {{/each}}
+    </div>
+  </section>
+  {{/if}}
+
+  {{!-- Control Buttons --}}
+  <footer class="montage-controls">
+    {{#if isSetup}}
+    <button type="button" data-action="activateTest" class="montage-btn-primary">
+      <i class="fa-solid fa-play"></i> {{localize "MONTAGE.Tracker.Activate"}}
+    </button>
+    <button type="button" data-action="editConfig">
+      <i class="fa-solid fa-gear"></i> {{localize "MONTAGE.Tracker.EditConfig"}}
+    </button>
+    {{/if}}
+
+    {{#if isActive}}
+    <button type="button" data-action="advanceRound">
+      <i class="fa-solid fa-forward"></i> {{localize "MONTAGE.Tracker.NextRound"}}
+    </button>
+    <button type="button" data-action="endTestEarly" class="montage-btn-danger">
+      <i class="fa-solid fa-stop"></i> {{localize "MONTAGE.Tracker.EndEarly"}}
+    </button>
+    {{/if}}
+  </footer>
+</section>
+
+{{else}}
+<div class="montage-no-test">
+  <p>{{localize "MONTAGE.Tracker.NoActiveTest"}}</p>
+  <button type="button" data-action="editConfig">
+    <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Tracker.CreateNew"}}
+  </button>
+</div>
+{{/if}}
