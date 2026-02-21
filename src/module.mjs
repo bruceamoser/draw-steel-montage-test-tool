@@ -1,7 +1,7 @@
 /**
  * Draw Steel Montage Test Tool
  * Main module entry point — registers hooks, socket, settings, and scene controls.
- * v0.3.9
+ * v0.4.0
  */
 import { MODULE_ID, SYSTEM_ID } from "./config.mjs";
 import { MontageAPI } from "./api/montage-api.mjs";
@@ -15,6 +15,58 @@ const log = (...args) => console.log(`${MODULE_ID} |`, ...args);
 /* ---------------------------------------- */
 
 const _DOC_TYPE_FIELD_PATCHED = Symbol.for(`${MODULE_ID}.patchedDocTypeField`);
+const _DATAMODELS_PROXIED    = Symbol.for(`${MODULE_ID}.proxiedDataModels`);
+
+/**
+ * Install a Proxy on CONFIG.Item.dataModels so that CONFIG.Item.dataModels['montageTest']
+ * ALWAYS returns MontageTestDataModel, even if a system or Foundry core replaces the
+ * underlying object after our init runs.  Also ensures 'montageTest' appears in
+ * Object.keys() and ownKeys so Draw Steel's createDialog filter enumerates it.
+ */
+function _installDataModelsProxy() {
+  // Already proxied by us
+  if (CONFIG.Item.dataModels?.[_DATAMODELS_PROXIED]) return;
+
+  const type  = MONTAGE_TEST_ITEM_TYPE;
+  const model = MontageTestDataModel;
+  const raw   = CONFIG.Item.dataModels ?? {};
+
+  // Direct-assign first so the property is concrete on the target
+  try { raw[type] = model; } catch { /* sealed — proxy will still intercept gets */ }
+
+  const proxy = new Proxy(raw, {
+    get(target, key, receiver) {
+      if (key === type)                return target[key] ?? model;
+      if (key === _DATAMODELS_PROXIED) return true;
+      return Reflect.get(target, key, receiver);
+    },
+    has(target, key) {
+      if (key === type) return true;
+      return Reflect.has(target, key);
+    },
+    ownKeys(target) {
+      const keys = Reflect.ownKeys(target);
+      if (!keys.includes(type)) keys.push(type);
+      return keys;
+    },
+    getOwnPropertyDescriptor(target, key) {
+      if (key === type) {
+        // Prefer the real descriptor; fall back to a synthetic one.
+        return Reflect.getOwnPropertyDescriptor(target, key)
+          ?? { value: model, writable: true, enumerable: true, configurable: true };
+      }
+      return Reflect.getOwnPropertyDescriptor(target, key);
+    },
+  });
+
+  try {
+    CONFIG.Item.dataModels = proxy;
+    log(`Installed CONFIG.Item.dataModels Proxy for ${type}`);
+  } catch {
+    // CONFIG.Item may be sealed — fall back; direct assignment is still there.
+    log(`Could not install Proxy; relying on direct CONFIG.Item.dataModels assignment`);
+  }
+}
 
 /**
  * Patch foundry.data.fields.DocumentTypeField._validateType so that our custom
@@ -95,11 +147,13 @@ Hooks.once("init", () => {
   if (game.system?.id !== SYSTEM_ID) return;
   _systemValid = true;
 
-  // Register the custom Item type + data model
+  // Register the custom Item type + data model, then install a Proxy on
+  // CONFIG.Item.dataModels so our entry survives any post-init reassignment.
   CONFIG.Item.typeLabels ??= {};
   CONFIG.Item.dataModels ??= {};
   CONFIG.Item.typeLabels[MONTAGE_TEST_ITEM_TYPE] = "MONTAGE.Item.MontageTest";
   CONFIG.Item.dataModels[MONTAGE_TEST_ITEM_TYPE] = MontageTestDataModel;
+  _installDataModelsProxy();
 
   // Patch DocumentTypeField._validateType so Foundry core field validation
   // never rejects montageTest regardless of which frozen list was built before
@@ -139,8 +193,8 @@ Hooks.once("init", () => {
 /* ---------------------------------------- */
 Hooks.once("setup", () => {
   if (!_systemValid) return;
-  // By the time "setup" fires the system has finished populating
-  // game.documentTypes. Re-run patches so the lists include our type.
+  // Re-run after system finalization in case CONFIG.Item.dataModels was replaced.
+  _installDataModelsProxy();
   _patchDocumentTypeFieldValidation();
   _ensureMontageTestAllowedItemType();
 });
