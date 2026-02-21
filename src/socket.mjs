@@ -277,7 +277,7 @@ export async function approveAction(actorId, approvalData = {}) {
   // Build flavor text for the chat message
   const hero = testData.heroes.find((h) => h.actorId === pending.actorId);
   const heroName = hero?.name ?? "Unknown";
-  const chrLabel = game.i18n.localize(`DRAW_STEEL.Characteristic.${chrKey.charAt(0).toUpperCase() + chrKey.slice(1)}.Full`);
+  const chrLabel = game.i18n.localize(`DRAW_STEEL.characteristics.${chrKey}.full`);
   const skillLabel = pending.skill
     ? game.i18n.localize(`DRAW_STEEL.SKILL.List.${pending.skill}`)
     : null;

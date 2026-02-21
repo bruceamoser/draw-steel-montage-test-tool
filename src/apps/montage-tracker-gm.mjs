@@ -85,7 +85,7 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
       const hero = testData.heroes.find((h) => h.actorId === p.actorId);
       let chrLabel = null;
       if (p.characteristic) {
-        chrLabel = game.i18n.localize(`DRAW_STEEL.Characteristic.${p.characteristic.charAt(0).toUpperCase() + p.characteristic.slice(1)}.Full`);
+        chrLabel = game.i18n.localize(`DRAW_STEEL.characteristics.${p.characteristic}.full`);
       }
       let skillLabel = null;
       if (p.skill) {
@@ -106,7 +106,7 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
       const hero = testData.heroes.find((h) => h.actorId === a.actorId);
       let chrLabel = null;
       if (a.characteristic) {
-        chrLabel = game.i18n.localize(`DRAW_STEEL.Characteristic.${a.characteristic.charAt(0).toUpperCase() + a.characteristic.slice(1)}.Full`);
+        chrLabel = game.i18n.localize(`DRAW_STEEL.characteristics.${a.characteristic}.full`);
       }
       let skillLabel = null;
       if (a.skill) {

@@ -114,7 +114,7 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
     const characteristicKeys = ["might", "agility", "reason", "intuition", "presence"];
     const characteristics = characteristicKeys.map((key) => {
       const value = actor?.system?.characteristics?.[key]?.value ?? 0;
-      const label = game.i18n.localize(`DRAW_STEEL.Characteristic.${key.charAt(0).toUpperCase() + key.slice(1)}.Full`);
+      const label = game.i18n.localize(`DRAW_STEEL.characteristics.${key}.full`);
       return { value: key, label: `${label} (${value >= 0 ? "+" : ""}${value})`, modifier: value };
     });
 
@@ -216,7 +216,6 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
     const form = this.element.querySelector('.montage-action-form');
     const actorId = form.querySelector('[name="actorId"]')?.value;
     const actionType = form.querySelector('[name="actionType"]')?.value;
-    const description = form.querySelector('[name="description"]')?.value ?? "";
     const aidTarget = form.querySelector('[name="aidTarget"]')?.value || null;
     const characteristic = form.querySelector('[name="characteristic"]')?.value || null;
     const skill = form.querySelector('[name="skill"]')?.value || null;
@@ -235,7 +234,6 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
     await submitAction({
       actorId,
       type: actionType,
-      description,
       aidTarget: actionType === ACTION_TYPE.AID ? aidTarget : null,
       characteristic: isRollOrAid ? characteristic : null,
       skill: isRollOrAid ? skill : null,

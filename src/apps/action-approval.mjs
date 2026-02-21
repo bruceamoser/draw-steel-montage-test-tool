@@ -72,9 +72,7 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
     let characteristicDisplay = null;
     if (pending.characteristic) {
       const actor = game.actors.get(this.#actorId);
-      const chrName = game.i18n.localize(
-        `DRAW_STEEL.Characteristic.${pending.characteristic.charAt(0).toUpperCase() + pending.characteristic.slice(1)}.Full`,
-      );
+      const chrName = game.i18n.localize(`DRAW_STEEL.characteristics.${pending.characteristic}.full`);
       const chrValue = actor?.system?.characteristics?.[pending.characteristic]?.value ?? 0;
       characteristicLabel = chrName;
       characteristicDisplay = `${chrName} (${chrValue >= 0 ? "+" : ""}${chrValue})`;
