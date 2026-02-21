@@ -63,22 +63,23 @@ Hooks.once("ready", () => {
 /*  Scene Controls                          */
 /* ---------------------------------------- */
 Hooks.on("getSceneControlButtons", (controls) => {
-  const tokenControls = controls.find((c) => c.name === "token");
-  if (!tokenControls) return;
+  // v13 API: controls is Record<string, SceneControl>, tools is Record<string, SceneControlTool>
+  if (!controls.tokens) return;
 
-  tokenControls.tools.push({
-    name: "montage-test",
-    title: game.i18n.localize("MONTAGE.Controls.OpenMontage"),
+  controls.tokens.tools.montageTest = {
+    name: "montageTest",
+    title: "MONTAGE.Controls.OpenMontage",
     icon: "fa-solid fa-mountain-sun",
+    order: Object.keys(controls.tokens.tools).length,
     button: true,
-    onClick: () => {
+    onChange: () => {
       if (game.user.isGM) {
         _openGMTracker();
       } else {
         _openPlayerTracker();
       }
     },
-  });
+  };
 });
 
 /* ---------------------------------------- */

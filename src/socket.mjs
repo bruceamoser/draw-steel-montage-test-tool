@@ -1,13 +1,13 @@
-import { MODULE_ID, SOCKET_NAME, SOCKET_EVENTS, TEST_STATUS, ACTION_TYPE } from "../config.mjs";
+import { MODULE_ID, SOCKET_NAME, SOCKET_EVENTS, TEST_STATUS, ACTION_TYPE } from "./config.mjs";
 import {
   loadActiveTest,
   saveActiveTest,
   createActionData,
   createRoundData,
-} from "../data/montage-test.mjs";
-import { getTier, getTestOutcome, getAssistOutcome } from "../helpers/difficulty.mjs";
-import { evaluateResolution, isRoundComplete, getCurrentRound } from "../helpers/resolution.mjs";
-import { postRoundSummary, postTestComplete, postActionSubmitted } from "../helpers/chat.mjs";
+} from "./data/montage-test.mjs";
+import { getTier, getTestOutcome, getAssistOutcome } from "./helpers/difficulty.mjs";
+import { evaluateResolution, isRoundComplete, getCurrentRound } from "./helpers/resolution.mjs";
+import { postRoundSummary, postTestComplete, postActionSubmitted } from "./helpers/chat.mjs";
 
 /**
  * Callbacks registered by UI components to respond to state changes.
