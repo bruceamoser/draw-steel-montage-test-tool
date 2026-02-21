@@ -83,20 +83,26 @@ Hooks.on("getSceneControlButtons", (controls) => {
   // v13 API: controls is Record<string, SceneControl>, tools is Record<string, SceneControlTool>
   if (!controls.tokens) return;
 
+  const _handler = (event, active) => {
+    console.log(`${MODULE_ID} | Montage button clicked`, { event, active });
+    if (game.user.isGM) {
+      _openGMTracker();
+    } else {
+      _openPlayerTracker();
+    }
+  };
+
   controls.tokens.tools.montageTest = {
     name: "montageTest",
     title: "MONTAGE.Controls.OpenMontage",
     icon: "fa-solid fa-mountain-sun",
     order: Object.keys(controls.tokens.tools).length,
     button: true,
-    onChange: () => {
-      if (game.user.isGM) {
-        _openGMTracker();
-      } else {
-        _openPlayerTracker();
-      }
-    },
+    visible: true,
+    onChange: _handler,
+    onClick: _handler,
   };
+  console.log(`${MODULE_ID} | Registered montageTest tool`, controls.tokens.tools.montageTest);
 });
 
 /* ---------------------------------------- */
