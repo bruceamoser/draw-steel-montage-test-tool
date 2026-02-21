@@ -27,6 +27,107 @@
 }
 
 /* --------------------------------------------------------------------------
+   Montage Test Item Sheet (v0.3.0)
+   -------------------------------------------------------------------------- */
+.montage-test-sheet .sheet-header {
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.montage-test-sheet .sheet-header .profile {
+  border: 2px solid var(--montage-border);
+  border-radius: var(--montage-radius);
+  object-fit: cover;
+}
+
+.montage-test-sheet .montage-basic-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 160px 90px 160px 90px;
+  gap: 6px;
+  align-items: center;
+}
+
+.montage-test-sheet .sheet-tabs {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 8px;
+}
+
+.montage-test-sheet .sheet-tabs a.item {
+  padding: 6px 10px;
+}
+
+.montage-readonly-block {
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--montage-radius);
+  background: rgba(255, 255, 255, 0.03);
+  min-height: 80px;
+}
+
+.montage-readonly-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.montage-list-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.montage-list-row input[type="text"] {
+  flex: 1;
+}
+
+.montage-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.montage-results-tally {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.montage-participants-drop {
+  padding: 6px 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: var(--montage-radius);
+  margin: 6px 0 10px;
+}
+
+.montage-results-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.montage-results-table th,
+.montage-results-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 6px;
+  vertical-align: middle;
+}
+
+.montage-hero-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.montage-row-actions {
+  width: 42px;
+  text-align: right;
+}
+
+/* --------------------------------------------------------------------------
    Hero Thumbnails
    -------------------------------------------------------------------------- */
 .montage-hero-thumb {

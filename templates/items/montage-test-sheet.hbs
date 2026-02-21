@@ -1,0 +1,214 @@
+<form class="montage-test-sheet" autocomplete="off">
+  <header class="sheet-header flexrow">
+    <img class="profile" src="{{item.img}}" data-edit="img" height="64" width="64" />
+    <div class="header-fields">
+      <h1 class="charname">
+        <input name="name" type="text" value="{{item.name}}" placeholder="{{localize 'MONTAGE.Item.MontageTest'}}" />
+      </h1>
+
+      {{#if isGM}}
+      <div class="montage-basic-row">
+        <label>{{localize "MONTAGE.Config.Difficulty"}}</label>
+        <select name="system.difficulty">
+          {{#each difficulties}}
+          <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+          {{/each}}
+        </select>
+
+        <label>{{localize "MONTAGE.Config.SuccessLimit"}}</label>
+        <input type="number" name="system.successLimit" value="{{item.system.successLimit}}" min="1" />
+
+        <label>{{localize "MONTAGE.Config.FailureLimit"}}</label>
+        <input type="number" name="system.failureLimit" value="{{item.system.failureLimit}}" min="1" />
+      </div>
+      {{/if}}
+    </div>
+  </header>
+
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="basic">{{localize "MONTAGE.Sheet.Tab.Basic"}}</a>
+    <a class="item" data-tab="complications">{{localize "MONTAGE.Sheet.Tab.Complications"}}</a>
+    {{#if isGM}}
+    <a class="item" data-tab="outcomes">{{localize "MONTAGE.Sheet.Tab.Outcomes"}}</a>
+    <a class="item" data-tab="results">{{localize "MONTAGE.Sheet.Tab.Results"}}</a>
+    {{/if}}
+  </nav>
+
+  <section class="tab-content">
+
+    {{!-- BASIC --}}
+    <div class="tab" data-group="primary" data-tab="basic">
+      <div class="form-group stacked">
+        <label>{{localize "MONTAGE.Sheet.Description"}}</label>
+        {{#if isGM}}
+        <textarea name="system.description" rows="8">{{item.system.description}}</textarea>
+        {{else}}
+        <div class="montage-readonly-block">{{{item.system.description}}}</div>
+        {{/if}}
+      </div>
+    </div>
+
+    {{!-- COMPLICATIONS --}}
+    <div class="tab" data-group="primary" data-tab="complications">
+      <div class="montage-complications">
+        <section class="montage-complications-round">
+          <h3>{{localize "MONTAGE.Config.Round1Complications"}}</h3>
+          {{#if isGM}}
+          <div class="montage-list">
+            {{#each complications.round1}}
+            <div class="montage-list-row">
+              <input type="text" name="system.complications.round1.{{this.index}}" value="{{this.text}}" />
+              <button type="button" data-action="removeComplication" data-round="1" data-index="{{this.index}}">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+            {{/each}}
+          </div>
+          <button type="button" class="montage-btn-primary" data-action="addComplication" data-round="1">
+            <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Config.AddComplication"}}
+          </button>
+          {{else}}
+          <ul class="montage-readonly-list">
+            {{#each complications.round1}}
+            {{#if this.text}}<li>{{this.text}}</li>{{/if}}
+            {{/each}}
+          </ul>
+          {{/if}}
+        </section>
+
+        <section class="montage-complications-round">
+          <h3>{{localize "MONTAGE.Config.Round2Complications"}}</h3>
+          {{#if isGM}}
+          <div class="montage-list">
+            {{#each complications.round2}}
+            <div class="montage-list-row">
+              <input type="text" name="system.complications.round2.{{this.index}}" value="{{this.text}}" />
+              <button type="button" data-action="removeComplication" data-round="2" data-index="{{this.index}}">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+            {{/each}}
+          </div>
+          <button type="button" class="montage-btn-primary" data-action="addComplication" data-round="2">
+            <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Config.AddComplication"}}
+          </button>
+          {{else}}
+          <ul class="montage-readonly-list">
+            {{#each complications.round2}}
+            {{#if this.text}}<li>{{this.text}}</li>{{/if}}
+            {{/each}}
+          </ul>
+          {{/if}}
+        </section>
+      </div>
+    </div>
+
+    {{!-- OUTCOMES (GM only) --}}
+    {{#if isGM}}
+    <div class="tab" data-group="primary" data-tab="outcomes">
+      <p class="notes">{{localize "MONTAGE.Sheet.OutcomesHint"}}</p>
+
+      <div class="form-group stacked">
+        <label>{{localize "MONTAGE.Outcome.TotalSuccess"}}</label>
+        <textarea name="system.outcomes.totalSuccess" rows="5">{{item.system.outcomes.totalSuccess}}</textarea>
+      </div>
+
+      <div class="form-group stacked">
+        <label>{{localize "MONTAGE.Outcome.PartialSuccess"}}</label>
+        <textarea name="system.outcomes.partialSuccess" rows="5">{{item.system.outcomes.partialSuccess}}</textarea>
+      </div>
+
+      <div class="form-group stacked">
+        <label>{{localize "MONTAGE.Outcome.TotalFailure"}}</label>
+        <textarea name="system.outcomes.totalFailure" rows="5">{{item.system.outcomes.totalFailure}}</textarea>
+      </div>
+
+      {{#if tally.outcomeKey}}
+      <hr />
+      <div class="montage-outcome montage-outcome-{{tally.outcomeKey}}">
+        <h3>{{tally.outcomeLabel}}</h3>
+      </div>
+      {{/if}}
+    </div>
+
+    {{!-- RESULTS (GM only) --}}
+    <div class="tab" data-group="primary" data-tab="results">
+      <div class="montage-results-header">
+        <div class="montage-results-tally">
+          <span class="montage-badge montage-status-active">{{localize "MONTAGE.Tracker.Successes"}}: {{tally.successes}}</span>
+          <span class="montage-badge montage-status-active">{{localize "MONTAGE.Tracker.Failures"}}: {{tally.failures}}</span>
+          {{#if tally.outcomeKey}}
+          <span class="montage-badge montage-status-resolved">{{tally.outcomeLabel}}</span>
+          {{/if}}
+        </div>
+
+        <div class="montage-results-limits">
+          <span class="notes">{{localize "MONTAGE.Config.SuccessLimit"}}: {{item.system.successLimit}}</span>
+          <span class="notes">{{localize "MONTAGE.Config.FailureLimit"}}: {{item.system.failureLimit}}</span>
+        </div>
+      </div>
+
+      <section class="montage-participants">
+        <header class="flexrow montage-participants-header">
+          <h3>{{localize "MONTAGE.Sheet.Participants"}}</h3>
+          <button type="button" data-action="addParticipant" class="montage-btn-primary">
+            <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Sheet.AddParticipant"}}
+          </button>
+        </header>
+
+        <div class="notes montage-participants-drop">{{localize "MONTAGE.Sheet.DropActor"}}</div>
+
+        {{#if participants.length}}
+        <table class="montage-results-table">
+          <thead>
+            <tr>
+              <th>{{localize "MONTAGE.Sheet.Hero"}}</th>
+              <th>{{localize "MONTAGE.Tracker.Round"}} 1</th>
+              <th>{{localize "MONTAGE.Tracker.Round"}} 2</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each participants}}
+            <tr>
+              <td class="montage-hero-cell">
+                <img src="{{this.img}}" class="montage-hero-thumb" />
+                <input type="hidden" name="system.participants.{{this.index}}.actorUuid" value="{{this.actorUuid}}" />
+                <input type="text" name="system.participants.{{this.index}}.name" value="{{this.name}}" placeholder="{{localize 'MONTAGE.Sheet.HeroName'}}" />
+                <input type="hidden" name="system.participants.{{this.index}}.img" value="{{this.img}}" />
+              </td>
+
+              <td>
+                <select name="system.participants.{{this.index}}.round1">
+                  {{#each ../resultChoices}}
+                  <option value="{{this.value}}" {{#if (eq this.value ../this.round1)}}selected{{/if}}>{{this.label}}</option>
+                  {{/each}}
+                </select>
+              </td>
+
+              <td>
+                <select name="system.participants.{{this.index}}.round2">
+                  {{#each ../resultChoices}}
+                  <option value="{{this.value}}" {{#if (eq this.value ../this.round2)}}selected{{/if}}>{{this.label}}</option>
+                  {{/each}}
+                </select>
+              </td>
+
+              <td class="montage-row-actions">
+                <button type="button" data-action="removeParticipant" data-index="{{this.index}}" class="montage-btn-danger">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+        {{else}}
+        <p class="notes">{{localize "MONTAGE.Sheet.NoParticipants"}}</p>
+        {{/if}}
+      </section>
+    </div>
+    {{/if}}
+
+  </section>
+</form>

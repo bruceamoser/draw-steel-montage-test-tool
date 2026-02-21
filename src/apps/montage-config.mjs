@@ -62,12 +62,12 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
 
   /* ----- Navigation state ----- */
 
-  #currentPhase = 0;
-  #editingTestId = null;
+  _currentPhase = 0;
+  _editingTestId = null;
 
   /* ----- Phase 1 working state ----- */
 
-  #phase1Data = {
+  _phase1Data = {
     name: "",
     difficulty: MONTAGE_DIFFICULTY.MODERATE,
     selectedHeroIds: null, // null = uninitialised → default to all
@@ -75,16 +75,16 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
     customFailureLimit: null,
   };
 
-  #phase1Initialized = false;
+  _phase1Initialized = false;
 
   /* ----- Phase 2 working state ----- */
 
-  #phase2Data = {
+  _phase2Data = {
     complications: [],
     gmNotes: { totalSuccess: "", partialSuccess: "", totalFailure: "" },
   };
 
-  #phase2Initialized = false;
+  _phase2Initialized = false;
 
   /* ================================================ */
   /*  Context                                         */
@@ -92,7 +92,7 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
 
   /** @override */
   async _prepareContext(options) {
-    switch (this.#currentPhase) {
+    switch (this._currentPhase) {
       case 1: return this.#preparePhase1();
       case 2: return this.#preparePhase2();
       default: return this.#preparePhase0();
@@ -138,33 +138,33 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
   #preparePhase1() {
     const availableHeroes = getAvailableHeroes();
 
-    if (!this.#phase1Initialized) {
-      this.#phase1Data.selectedHeroIds = new Set(availableHeroes.map((h) => h.actorId));
-      this.#phase1Data.name = "";
-      this.#phase1Data.difficulty = MONTAGE_DIFFICULTY.MODERATE;
-      this.#phase1Data.customSuccessLimit = null;
-      this.#phase1Data.customFailureLimit = null;
-      this.#phase1Initialized = true;
+    if (!this._phase1Initialized) {
+      this._phase1Data.selectedHeroIds = new Set(availableHeroes.map((h) => h.actorId));
+      this._phase1Data.name = "";
+      this._phase1Data.difficulty = MONTAGE_DIFFICULTY.MODERATE;
+      this._phase1Data.customSuccessLimit = null;
+      this._phase1Data.customFailureLimit = null;
+      this._phase1Initialized = true;
     }
 
-    const heroCount = this.#phase1Data.selectedHeroIds.size;
-    const limits = calculateLimits(this.#phase1Data.difficulty, heroCount || 1);
+    const heroCount = this._phase1Data.selectedHeroIds.size;
+    const limits = calculateLimits(this._phase1Data.difficulty, heroCount || 1);
 
     return {
       phase: 1,
-      formData: this.#phase1Data,
+      formData: this._phase1Data,
       availableHeroes: availableHeroes.map((h) => ({
         ...h,
-        selected: this.#phase1Data.selectedHeroIds.has(h.actorId),
+        selected: this._phase1Data.selectedHeroIds.has(h.actorId),
       })),
       difficulties: Object.entries(MONTAGE_DIFFICULTY).map(([key, value]) => ({
         value,
         label: game.i18n.localize(`MONTAGE.Difficulty.${key.charAt(0) + key.slice(1).toLowerCase()}`),
-        selected: value === this.#phase1Data.difficulty,
+        selected: value === this._phase1Data.difficulty,
       })),
       heroCount,
-      successLimit: this.#phase1Data.customSuccessLimit ?? limits.successLimit,
-      failureLimit: this.#phase1Data.customFailureLimit ?? limits.failureLimit,
+      successLimit: this._phase1Data.customSuccessLimit ?? limits.successLimit,
+      failureLimit: this._phase1Data.customFailureLimit ?? limits.failureLimit,
     };
   }
 
@@ -172,35 +172,35 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
    * Phase 2 context — configuring complications & GM notes before activation.
    */
   #preparePhase2() {
-    const testData = getDraftTest(this.#editingTestId);
+    const testData = getDraftTest(this._editingTestId);
     if (!testData) {
       // Draft was deleted or missing — fall back to Phase 0
-      this.#currentPhase = 0;
+      this._currentPhase = 0;
       return this.#preparePhase0();
     }
 
-    if (!this.#phase2Initialized) {
-      this.#phase2Data.complications = (testData.complications ?? []).map((c) => ({ ...c }));
-      this.#phase2Data.gmNotes = {
+    if (!this._phase2Initialized) {
+      this._phase2Data.complications = (testData.complications ?? []).map((c) => ({ ...c }));
+      this._phase2Data.gmNotes = {
         totalSuccess: testData.gmNotes?.totalSuccess ?? "",
         partialSuccess: testData.gmNotes?.partialSuccess ?? "",
         totalFailure: testData.gmNotes?.totalFailure ?? "",
       };
-      this.#phase2Initialized = true;
+      this._phase2Initialized = true;
     } else if (this.element) {
       // Sync form inputs before re-render so text isn't lost
-      this.#syncPhase2FromForm();
+      this._syncPhase2FromForm();
     }
 
-    const round1Complications = this.#phase2Data.complications.filter((c) => c.triggerRound === 1);
-    const round2Complications = this.#phase2Data.complications.filter((c) => c.triggerRound === 2);
+    const round1Complications = this._phase2Data.complications.filter((c) => c.triggerRound === 1);
+    const round2Complications = this._phase2Data.complications.filter((c) => c.triggerRound === 2);
 
     return {
       phase: 2,
       test: testData,
       round1Complications,
       round2Complications,
-      gmNotes: this.#phase2Data.gmNotes,
+      gmNotes: this._phase2Data.gmNotes,
       difficultyLabel: game.i18n.localize(
         `MONTAGE.Difficulty.${testData.difficulty.charAt(0).toUpperCase() + testData.difficulty.slice(1)}`,
       ),
@@ -219,15 +219,15 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
       // Difficulty change → recalculate and re-render
       const difficultySelect = this.element.querySelector('[name="difficulty"]');
       difficultySelect?.addEventListener("change", () => {
-        this.#phase1Data.difficulty = difficultySelect.value;
+        this._phase1Data.difficulty = difficultySelect.value;
         this.render();
       });
 
       // Hero checkboxes → inline update limits (no full re-render)
       this.element.querySelectorAll('.hero-select input[type="checkbox"]').forEach((cb) => {
         cb.addEventListener("change", () => {
-          if (cb.checked) this.#phase1Data.selectedHeroIds.add(cb.value);
-          else this.#phase1Data.selectedHeroIds.delete(cb.value);
+          if (cb.checked) this._phase1Data.selectedHeroIds.add(cb.value);
+          else this._phase1Data.selectedHeroIds.delete(cb.value);
           this.#updateLimitsDisplay();
         });
       });
@@ -235,7 +235,7 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
       // Sync name input on typing
       const nameInput = this.element.querySelector('[name="testName"]');
       nameInput?.addEventListener("input", () => {
-        this.#phase1Data.name = nameInput.value;
+        this._phase1Data.name = nameInput.value;
       });
 
       // Sync editable limit inputs
@@ -243,11 +243,11 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
       const failureInput = this.element.querySelector('input[name="failureLimit"]');
       successInput?.addEventListener("change", () => {
         const val = parseInt(successInput.value);
-        this.#phase1Data.customSuccessLimit = isNaN(val) || val < 1 ? null : val;
+        this._phase1Data.customSuccessLimit = isNaN(val) || val < 1 ? null : val;
       });
       failureInput?.addEventListener("change", () => {
         const val = parseInt(failureInput.value);
-        this.#phase1Data.customFailureLimit = isNaN(val) || val < 1 ? null : val;
+        this._phase1Data.customFailureLimit = isNaN(val) || val < 1 ? null : val;
       });
     }
   }
@@ -260,18 +260,18 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
    * Update the limits display inline (no re-render needed).
    */
   #updateLimitsDisplay() {
-    const heroCount = this.#phase1Data.selectedHeroIds.size;
-    const limits = calculateLimits(this.#phase1Data.difficulty, heroCount || 1);
+    const heroCount = this._phase1Data.selectedHeroIds.size;
+    const limits = calculateLimits(this._phase1Data.difficulty, heroCount || 1);
 
     const successEl = this.element.querySelector('input[data-limit="success"]');
     const failureEl = this.element.querySelector('input[data-limit="failure"]');
     const countEl = this.element.querySelector('[data-hero-count]');
 
     // Only update values if the GM hasn't manually overridden them
-    if (successEl && this.#phase1Data.customSuccessLimit === null) {
+    if (successEl && this._phase1Data.customSuccessLimit === null) {
       successEl.value = limits.successLimit;
     }
-    if (failureEl && this.#phase1Data.customFailureLimit === null) {
+    if (failureEl && this._phase1Data.customFailureLimit === null) {
       failureEl.value = limits.failureLimit;
     }
     if (countEl) countEl.textContent = heroCount;
@@ -280,10 +280,10 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
   /**
    * Read Phase 2 form inputs back into #phase2Data.
    */
-  #syncPhase2FromForm() {
+  _syncPhase2FromForm() {
     if (!this.element) return;
 
-    for (const comp of this.#phase2Data.complications) {
+    for (const comp of this._phase2Data.complications) {
       const descInput = this.element.querySelector(`[name="comp-desc-${comp.id}"]`);
       const failInput = this.element.querySelector(`[name="comp-fail-${comp.id}"]`);
       if (descInput) comp.description = descInput.value;
@@ -293,9 +293,9 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
     const tsInput = this.element.querySelector('[name="gmNotes-totalSuccess"]');
     const psInput = this.element.querySelector('[name="gmNotes-partialSuccess"]');
     const tfInput = this.element.querySelector('[name="gmNotes-totalFailure"]');
-    if (tsInput) this.#phase2Data.gmNotes.totalSuccess = tsInput.value;
-    if (psInput) this.#phase2Data.gmNotes.partialSuccess = psInput.value;
-    if (tfInput) this.#phase2Data.gmNotes.totalFailure = tfInput.value;
+    if (tsInput) this._phase2Data.gmNotes.totalSuccess = tsInput.value;
+    if (psInput) this._phase2Data.gmNotes.partialSuccess = psInput.value;
+    if (tfInput) this._phase2Data.gmNotes.totalFailure = tfInput.value;
   }
 
   /* ================================================ */
@@ -304,17 +304,17 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
 
   /** Phase 0 — Navigate to Phase 1 to create a new test. */
   static #onNewTest() {
-    this.#currentPhase = 1;
-    this.#phase1Initialized = false;
+    this._currentPhase = 1;
+    this._phase1Initialized = false;
     this.render();
   }
 
   /** Phase 0 — Open an existing draft test for editing (Phase 2). */
   static #onSelectTest(event, target) {
     const testId = target.dataset.testId;
-    this.#editingTestId = testId;
-    this.#currentPhase = 2;
-    this.#phase2Initialized = false;
+    this._editingTestId = testId;
+    this._currentPhase = 2;
+    this._phase2Initialized = false;
     this.render();
   }
 
@@ -327,10 +327,10 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
 
   /** Phase 1 / Phase 2 — Navigate back to Phase 0. */
   static #onBackToList() {
-    this.#currentPhase = 0;
-    this.#editingTestId = null;
-    this.#phase1Initialized = false;
-    this.#phase2Initialized = false;
+    this._currentPhase = 0;
+    this._editingTestId = null;
+    this._phase1Initialized = false;
+    this._phase2Initialized = false;
     this.render();
   }
 
@@ -338,10 +338,10 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
    * Phase 1 — Create the montage test, save as draft, then transition to Phase 2.
    */
   static async #onCreateTest() {
-    const name = this.#phase1Data.name || "Montage Test";
-    const difficulty = this.#phase1Data.difficulty;
+    const name = this._phase1Data.name || "Montage Test";
+    const difficulty = this._phase1Data.difficulty;
     const availableHeroes = getAvailableHeroes();
-    const heroes = availableHeroes.filter((h) => this.#phase1Data.selectedHeroIds.has(h.actorId));
+    const heroes = availableHeroes.filter((h) => this._phase1Data.selectedHeroIds.has(h.actorId));
 
     if (heroes.length === 0) {
       ui.notifications.warn(game.i18n.localize("MONTAGE.Warn.NoHeroes"));
@@ -353,11 +353,11 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
     const failureInput = this.element?.querySelector('input[name="failureLimit"]');
     if (successInput) {
       const val = parseInt(successInput.value);
-      this.#phase1Data.customSuccessLimit = isNaN(val) || val < 1 ? null : val;
+      this._phase1Data.customSuccessLimit = isNaN(val) || val < 1 ? null : val;
     }
     if (failureInput) {
       const val = parseInt(failureInput.value);
-      this.#phase1Data.customFailureLimit = isNaN(val) || val < 1 ? null : val;
+      this._phase1Data.customFailureLimit = isNaN(val) || val < 1 ? null : val;
     }
 
     const createOptions = {
@@ -366,11 +366,11 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
       heroCount: heroes.length,
       heroes,
     };
-    if (this.#phase1Data.customSuccessLimit !== null) {
-      createOptions.successLimit = this.#phase1Data.customSuccessLimit;
+    if (this._phase1Data.customSuccessLimit !== null) {
+      createOptions.successLimit = this._phase1Data.customSuccessLimit;
     }
-    if (this.#phase1Data.customFailureLimit !== null) {
-      createOptions.failureLimit = this.#phase1Data.customFailureLimit;
+    if (this._phase1Data.customFailureLimit !== null) {
+      createOptions.failureLimit = this._phase1Data.customFailureLimit;
     }
 
     const testData = createMontageTestData(createOptions);
@@ -379,10 +379,10 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
     ui.notifications.info(game.i18n.format("MONTAGE.Notify.TestCreated", { name: testData.name }));
 
     // Transition to Phase 2 for this test
-    this.#editingTestId = testData.id;
-    this.#currentPhase = 2;
-    this.#phase1Initialized = false;
-    this.#phase2Initialized = false;
+    this._editingTestId = testData.id;
+    this._currentPhase = 2;
+    this._phase1Initialized = false;
+    this._phase2Initialized = false;
     this.render();
   }
 
@@ -391,9 +391,9 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
    */
   static #onAddComplication(event, target) {
     // Sync form first so existing text isn't lost
-    this.#syncPhase2FromForm();
+    this._syncPhase2FromForm();
     const round = parseInt(target.dataset.round) || 1;
-    this.#phase2Data.complications.push(createComplication({ triggerRound: round }));
+    this._phase2Data.complications.push(createComplication({ triggerRound: round }));
     this.render();
   }
 
@@ -401,11 +401,11 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
    * Phase 2 — Remove a complication.
    */
   static #onRemoveComplication(event, target) {
-    this.#syncPhase2FromForm();
+    this._syncPhase2FromForm();
     const id = target.dataset.complicationId;
-    const idx = this.#phase2Data.complications.findIndex((c) => c.id === id);
+    const idx = this._phase2Data.complications.findIndex((c) => c.id === id);
     if (idx >= 0) {
-      this.#phase2Data.complications.splice(idx, 1);
+      this._phase2Data.complications.splice(idx, 1);
       this.render();
     }
   }
@@ -414,13 +414,13 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
    * Phase 2 — Save complications & notes to draft without activating.
    */
   static async #onSaveSetup() {
-    this.#syncPhase2FromForm();
+    this._syncPhase2FromForm();
 
-    const testData = getDraftTest(this.#editingTestId);
+    const testData = getDraftTest(this._editingTestId);
     if (!testData) return;
 
-    testData.complications = this.#phase2Data.complications.map((c) => ({ ...c }));
-    testData.gmNotes = { ...this.#phase2Data.gmNotes };
+    testData.complications = this._phase2Data.complications.map((c) => ({ ...c }));
+    testData.gmNotes = { ...this._phase2Data.gmNotes };
 
     await updateDraftTest(testData);
     ui.notifications.info(game.i18n.localize("MONTAGE.Notify.SetupSaved"));
@@ -437,21 +437,21 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
       return;
     }
 
-    this.#syncPhase2FromForm();
+    this._syncPhase2FromForm();
 
-    const testData = getDraftTest(this.#editingTestId);
+    const testData = getDraftTest(this._editingTestId);
     if (!testData) return;
 
     // Apply complications & notes
-    testData.complications = this.#phase2Data.complications.map((c) => ({ ...c }));
-    testData.gmNotes = { ...this.#phase2Data.gmNotes };
+    testData.complications = this._phase2Data.complications.map((c) => ({ ...c }));
+    testData.gmNotes = { ...this._phase2Data.gmNotes };
 
     // Save to active test slot with SETUP status so activateTest() picks it up
     testData.status = TEST_STATUS.SETUP;
     await saveActiveTest(testData);
 
     // Remove from drafts
-    await deleteDraftTest(this.#editingTestId);
+    await deleteDraftTest(this._editingTestId);
 
     // Activate (transitions SETUP → ACTIVE, creates round data, broadcasts)
     await activateTest();

@@ -16,11 +16,11 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
    */
   constructor(options = {}) {
     super(options);
-    this.#actorId = options.actorId;
+    this.actorId = options.actorId;
   }
 
   /** @type {string} */
-  #actorId;
+  actorId;
 
   /** @override */
   static DEFAULT_OPTIONS = {
@@ -54,11 +54,11 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
     if (!testData) return { hasData: false };
 
     const pending = (testData.pendingActions ?? []).find(
-      (p) => p.actorId === this.#actorId,
+      (p) => p.actorId === this.actorId,
     );
     if (!pending) return { hasData: false };
 
-    const hero = testData.heroes.find((h) => h.actorId === this.#actorId);
+    const hero = testData.heroes.find((h) => h.actorId === this.actorId);
 
     // Build aid target info if applicable
     let aidTargetName = null;
@@ -71,7 +71,7 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
     let characteristicLabel = null;
     let characteristicDisplay = null;
     if (pending.characteristic) {
-      const actor = game.actors.get(this.#actorId);
+      const actor = game.actors.get(this.actorId);
       const chrName = CHARACTERISTIC_LABELS[pending.characteristic] ?? pending.characteristic;
       const chrValue = actor?.system?.characteristics?.[pending.characteristic]?.value ?? 0;
       characteristicLabel = chrName;
@@ -99,7 +99,7 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
 
     return {
       hasData: true,
-      actorId: this.#actorId,
+      actorId: this.actorId,
       heroName: hero?.name ?? "Unknown",
       heroImg: hero?.img ?? "icons/svg/mystery-man.svg",
       actionType: pending.type,
@@ -148,7 +148,7 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
    * Handle rejection.
    */
   static async #onReject(event, target) {
-    const actorId = this.#actorId;
+    const actorId = this.actorId;
     const { rejectAction } = await import("../socket.mjs");
     await rejectAction(actorId, "The Director has rejected this action.");
     ui.notifications.info(game.i18n.localize("MONTAGE.Notify.ActionRejected"));

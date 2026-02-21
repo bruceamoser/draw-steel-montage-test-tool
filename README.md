@@ -10,17 +10,12 @@ A [Foundry VTT](https://foundryvtt.com) module for building, tracking, and resol
 
 ## Features
 
-- **GM Configuration** — Create montage tests with difficulty selection, hero roster, optional complications per round, and custom round limits
-- **Automatic Limit Calculation** — Success and failure limits calculated from montage difficulty and hero count per the Draw Steel rules (with manual override)
-- **Player Tracker** — Each player receives a dedicated window to choose their action each round: Roll, Aid Another Hero, Use an Ability, or Do Nothing
-- **GM Approval Flow** — Every player action is submitted to the GM for review; the GM sets individual test difficulty, then approves or rejects
-- **Live Progress** — Real-time success/failure progress bars synced across all connected clients
-- **Complication Management** — Define complications that trigger on specific rounds
-- **Manual Tally Adjustment** — GM can adjust success/failure counts at any time
-- **Chat Integration** — Round summaries and test completion cards posted to chat automatically
-- **Outcome Notes** — GM can pre-write narrative text for total success, partial success, and total failure
-- **Victory Tracking** — Automatic victory awards based on difficulty and outcome
-- **Public API** — Programmatic access via `game.modules.get("draw-steel-montage").api`
+- **Custom Item Type: Montage Test** — Montage Tests are stored as Items, so you get persistence, duplication, and permissions “for free”
+- **Tabbed Sheet** — Basic Info, Complications (Round 1 / Round 2), Outcomes (GM-only), and Results (GM-only)
+- **Complications by Round** — Players can view round-specific complication lists on the item
+- **Outcome Notes (GM-only)** — GM writes narrative outcomes for Total Success / Partial Success / Total Failure
+- **Results Tracker (GM-only)** — GM marks each participant as Success / Fail / Neither for each round; totals are computed automatically
+- **Public API (minimal)** — Helpers via `game.modules.get("draw-steel-montage").api`
 
 ## Rules Reference
 
@@ -92,15 +87,14 @@ A natural 19–20 on the power roll always counts as Tier 3 with a reward.
 
 ## How to Use
 
-1. **Open the tool** — Click the mountain (⛰) icon in the Token controls sidebar, or type `/montage` in chat
-2. **Create a montage test** — Use `/montage new` or the toolbar button. Configure difficulty, select participating heroes, add round complications, and write outcome notes
-3. **Activate** — Click **Activate Test**. All players with a hero in the test automatically receive their tracker window
-4. **Player actions** — Each player selects an action type, describes their approach, and submits
-5. **GM approval** — The GM reviews each submitted action, sets the individual test difficulty, and approves or rejects
-6. **Rolling** — After approval the player makes a power roll; the GM can also enter results manually
-7. **Auto-tally** — Successes and failures are tallied automatically based on the roll tier and test difficulty
-8. **Advance rounds** — Once all heroes have acted, advance to the next round (or let it auto-advance)
-9. **Resolution** — The test resolves automatically when a limit is reached or rounds are exhausted; a summary card is posted to chat
+1. **Open Items** — Click the mountain (⛰) icon in Token controls, or type `/montage` in chat
+2. **Create a Montage Test** — As GM, run `/montage new` (or create an Item of type **Montage Test**)
+3. **Fill in the sheet**
+   - **Basic Info**: enter the test description/instructions
+   - **Complications**: enter Round 1 and Round 2 complication lists (players can read these)
+   - **Outcomes (GM-only)**: write what happens for Total Success / Partial Success / Total Failure
+   - **Results (GM-only)**: add participants and mark Success / Fail / Neither for each round
+4. **Duplicate for templates** — Duplicate an item when you want a reusable “blank” test template
 
 ## Compatibility
 

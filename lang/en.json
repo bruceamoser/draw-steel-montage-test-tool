@@ -1,6 +1,27 @@
 {
   "MONTAGE.ModuleTitle": "Draw Steel Montage Test Tool",
 
+  "MONTAGE.Item.MontageTest": "Montage Test",
+  "MONTAGE.Item.DefaultName": "New Montage Test",
+
+  "MONTAGE.Sheet.Tab.Basic": "Basic Info",
+  "MONTAGE.Sheet.Tab.Complications": "Complications",
+  "MONTAGE.Sheet.Tab.Outcomes": "Outcomes",
+  "MONTAGE.Sheet.Tab.Results": "Results",
+  "MONTAGE.Sheet.Description": "Description",
+  "MONTAGE.Sheet.OutcomesHint": "GM-only: describe what happens for each rules outcome.",
+  "MONTAGE.Sheet.Participants": "Participants",
+  "MONTAGE.Sheet.AddParticipant": "Add Participant",
+  "MONTAGE.Sheet.DropActor": "Drag an Actor here to add them to the results table.",
+  "MONTAGE.Sheet.Hero": "Hero",
+  "MONTAGE.Sheet.HeroName": "Name",
+  "MONTAGE.Sheet.NoParticipants": "No participants yet.",
+
+  "MONTAGE.TestResult.Unset": "—",
+  "MONTAGE.TestResult.Success": "Success",
+  "MONTAGE.TestResult.Fail": "Fail",
+  "MONTAGE.TestResult.Neither": "Neither",
+
   "MONTAGE.Controls.OpenMontage": "Montage Test",
 
   "MONTAGE.Status.Setup": "Setup",
