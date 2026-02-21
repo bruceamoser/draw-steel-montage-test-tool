@@ -1,5 +1,5 @@
 {{#if hasData}}
-<form class="montage-approval" autocomplete="off">
+<div class="montage-approval">
   <input type="hidden" name="actorId" value="{{actorId}}" />
   <input type="hidden" name="heroName" value="{{heroName}}" />
 
@@ -58,14 +58,14 @@
 
   {{!-- Buttons --}}
   <footer class="montage-approval-footer">
-    <button type="submit" class="montage-btn-primary">
+    <button type="button" data-action="approve" class="montage-btn-primary">
       <i class="fa-solid fa-check"></i> {{localize "MONTAGE.Approval.Approve"}}
     </button>
     <button type="button" data-action="reject" class="montage-btn-danger">
       <i class="fa-solid fa-xmark"></i> {{localize "MONTAGE.Approval.Reject"}}
     </button>
   </footer>
-</form>
+</div>
 
 {{else}}
 <div class="montage-no-data">

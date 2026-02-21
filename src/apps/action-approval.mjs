@@ -35,12 +35,8 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
       width: 450,
       height: "auto",
     },
-    form: {
-      handler: ActionApprovalApp.#onSubmit,
-      submitOnChange: false,
-      closeOnSubmit: true,
-    },
     actions: {
+      approve: ActionApprovalApp.#onApprove,
       reject: ActionApprovalApp.#onReject,
     },
   };
@@ -105,26 +101,23 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
   }
 
   /**
-   * Handle form submission (approval).
-   * @param {Event} event
-   * @param {HTMLFormElement} form
-   * @param {FormDataExtended} formData
+   * Handle approval button click.
    */
-  static async #onSubmit(event, form, formData) {
-    const data = formData.object;
-    const actorId = data.actorId;
-    const approvalData = {
-      difficulty: data.difficulty ?? null,
-      autoSuccesses: parseInt(data.autoSuccesses) || 0,
-      gmNotes: data.gmNotes ?? "",
-    };
+  static async #onApprove(event, target) {
+    const container = this.element.querySelector('.montage-approval');
+    const actorId = container.querySelector('[name="actorId"]')?.value;
+    const heroName = container.querySelector('[name="heroName"]')?.value ?? "Hero";
+    const difficulty = container.querySelector('[name="difficulty"]')?.value ?? null;
+    const autoSuccesses = parseInt(container.querySelector('[name="autoSuccesses"]')?.value) || 0;
+    const gmNotes = container.querySelector('[name="gmNotes"]')?.value ?? "";
+
+    const approvalData = { difficulty, autoSuccesses, gmNotes };
 
     await socketApproveAction(actorId, approvalData);
     ui.notifications.info(
-      game.i18n.format("MONTAGE.Notify.ActionApproved", {
-        name: data.heroName ?? "Hero",
-      }),
+      game.i18n.format("MONTAGE.Notify.ActionApproved", { name: heroName }),
     );
+    this.close();
   }
 
   /**
