@@ -1,4 +1,4 @@
-import { MODULE_ID, TEST_STATUS, ACTION_TYPE } from "../config.mjs";
+import { MODULE_ID, TEST_STATUS, ACTION_TYPE, CHARACTERISTIC_LABELS, getSkillLabel } from "../config.mjs";
 import { loadActiveTest, saveActiveTest } from "../data/montage-test.mjs";
 import { getCurrentRound, getHeroesWaiting, evaluateResolution } from "../helpers/resolution.mjs";
 import {
@@ -85,11 +85,11 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
       const hero = testData.heroes.find((h) => h.actorId === p.actorId);
       let chrLabel = null;
       if (p.characteristic) {
-        chrLabel = game.i18n.localize(`DRAW_STEEL.characteristics.${p.characteristic}.full`);
+        chrLabel = CHARACTERISTIC_LABELS[p.characteristic] ?? p.characteristic;
       }
       let skillLabel = null;
       if (p.skill) {
-        skillLabel = game.i18n.localize(`DRAW_STEEL.SKILL.List.${p.skill}`);
+        skillLabel = getSkillLabel(p.skill);
       }
       return {
         ...p,
@@ -106,11 +106,11 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
       const hero = testData.heroes.find((h) => h.actorId === a.actorId);
       let chrLabel = null;
       if (a.characteristic) {
-        chrLabel = game.i18n.localize(`DRAW_STEEL.characteristics.${a.characteristic}.full`);
+        chrLabel = CHARACTERISTIC_LABELS[a.characteristic] ?? a.characteristic;
       }
       let skillLabel = null;
       if (a.skill) {
-        skillLabel = game.i18n.localize(`DRAW_STEEL.SKILL.List.${a.skill}`);
+        skillLabel = getSkillLabel(a.skill);
       }
       return {
         ...a,

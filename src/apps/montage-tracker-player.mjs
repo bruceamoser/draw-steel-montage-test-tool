@@ -1,4 +1,4 @@
-import { MODULE_ID, TEST_STATUS, ACTION_TYPE } from "../config.mjs";
+import { MODULE_ID, TEST_STATUS, ACTION_TYPE, CHARACTERISTIC_LABELS, getSkillLabel } from "../config.mjs";
 import { loadActiveTest } from "../data/montage-test.mjs";
 import { hasHeroActedThisRound, getCurrentRound } from "../helpers/resolution.mjs";
 import { onStateUpdate, submitAction } from "../socket.mjs";
@@ -111,17 +111,15 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
 
     // Build characteristic options from the hero actor
     const actor = game.actors.get(actorId);
-    const characteristicKeys = ["might", "agility", "reason", "intuition", "presence"];
-    const characteristics = characteristicKeys.map((key) => {
+    const characteristics = Object.entries(CHARACTERISTIC_LABELS).map(([key, name]) => {
       const value = actor?.system?.characteristics?.[key]?.value ?? 0;
-      const label = game.i18n.localize(`DRAW_STEEL.characteristics.${key}.full`);
-      return { value: key, label: `${label} (${value >= 0 ? "+" : ""}${value})`, modifier: value };
+      return { value: key, label: `${name} (${value >= 0 ? "+" : ""}${value})`, modifier: value };
     });
 
     // Build skill options from Draw Steel i18n
-    const skillListI18n = game.i18n.translations?.DRAW_STEEL?.SKILL?.List ?? {};
-    const skills = Object.entries(skillListI18n)
-      .map(([key, label]) => ({ value: key, label }))
+    const skillListRaw = game.i18n.translations?.DRAW_STEEL?.SKILL?.List ?? {};
+    const skills = Object.entries(skillListRaw)
+      .map(([key, label]) => ({ value: key, label: typeof label === "string" ? label : key }))
       .sort((a, b) => a.label.localeCompare(b.label));
 
     // Progress percentages

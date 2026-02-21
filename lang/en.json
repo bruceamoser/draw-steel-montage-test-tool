@@ -100,7 +100,6 @@
   "MONTAGE.Approval.Characteristic": "Characteristic",
   "MONTAGE.Approval.Skill": "Skill",
   "MONTAGE.Approval.TestDifficulty": "Individual Test Difficulty",
-  "MONTAGE.Approval.DifficultyHint": "Easy: T1=success w/consequence, T2=success, T3=success w/reward. Medium: T1=failure, T2=success w/consequence, T3=success. Hard: T1=failure w/consequence, T2=failure, T3=success.",
   "MONTAGE.Approval.AutoSuccesses": "Successes Granted",
   "MONTAGE.Approval.AutoSuccessesHint": "How many automatic successes does this ability provide?",
   "MONTAGE.Approval.GMNotes": "GM Notes",

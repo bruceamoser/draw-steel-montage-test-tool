@@ -30,28 +30,34 @@
 
   {{!-- Characteristic & Skill --}}
   {{#if hasCharacteristic}}
-  <div class="form-group">
-    <label>{{localize "MONTAGE.Approval.Characteristic"}}</label>
-    <span class="montage-approval-value">{{characteristicDisplay}}</span>
-  </div>
-  {{/if}}
-  {{#if hasSkill}}
-  <div class="form-group">
-    <label>{{localize "MONTAGE.Approval.Skill"}}</label>
-    <span class="montage-approval-value">{{skillLabel}}</span>
+  <div class="montage-approval-roll-info">
+    <div class="montage-approval-field">
+      <span class="montage-approval-field-label">{{localize "MONTAGE.Approval.Characteristic"}}:</span>
+      <span class="montage-approval-field-value">{{characteristicDisplay}}</span>
+    </div>
+    {{#if hasSkill}}
+    <div class="montage-approval-field">
+      <span class="montage-approval-field-label">{{localize "MONTAGE.Approval.Skill"}}:</span>
+      <span class="montage-approval-field-value">{{skillLabel}}</span>
+    </div>
+    {{/if}}
   </div>
   {{/if}}
 
   {{!-- Test Difficulty Selector (for rolls and aid) --}}
   {{#if needsDifficulty}}
-  <div class="form-group">
+  <div class="form-group stacked">
     <label for="difficulty">{{localize "MONTAGE.Approval.TestDifficulty"}}</label>
     <select name="difficulty">
       {{#each difficulties}}
       <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
       {{/each}}
     </select>
-    <p class="notes">{{localize "MONTAGE.Approval.DifficultyHint"}}</p>
+    <p class="montage-difficulty-hint">
+      <strong>Easy:</strong> T1=success w/consequence, T2=success, T3=success w/reward<br/>
+      <strong>Medium:</strong> T1=failure, T2=success w/consequence, T3=success<br/>
+      <strong>Hard:</strong> T1=failure w/consequence, T2=failure, T3=success
+    </p>
   </div>
   {{/if}}
 

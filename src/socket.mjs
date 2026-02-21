@@ -1,4 +1,4 @@
-import { MODULE_ID, SOCKET_NAME, SOCKET_EVENTS, TEST_STATUS, ACTION_TYPE } from "./config.mjs";
+import { MODULE_ID, SOCKET_NAME, SOCKET_EVENTS, TEST_STATUS, ACTION_TYPE, CHARACTERISTIC_LABELS, getSkillLabel } from "./config.mjs";
 import {
   loadActiveTest,
   saveActiveTest,
@@ -277,9 +277,9 @@ export async function approveAction(actorId, approvalData = {}) {
   // Build flavor text for the chat message
   const hero = testData.heroes.find((h) => h.actorId === pending.actorId);
   const heroName = hero?.name ?? "Unknown";
-  const chrLabel = game.i18n.localize(`DRAW_STEEL.characteristics.${chrKey}.full`);
+  const chrLabel = CHARACTERISTIC_LABELS[chrKey] ?? chrKey;
   const skillLabel = pending.skill
-    ? game.i18n.localize(`DRAW_STEEL.SKILL.List.${pending.skill}`)
+    ? getSkillLabel(pending.skill)
     : null;
   const actionLabel = game.i18n.localize(`MONTAGE.Action.${pending.type.charAt(0).toUpperCase() + pending.type.slice(1)}`);
   let flavor = `<strong>${heroName}</strong> — ${actionLabel} (${chrLabel}`;

@@ -1,4 +1,4 @@
-import { MODULE_ID, TEST_DIFFICULTY, ACTION_TYPE } from "../config.mjs";
+import { MODULE_ID, TEST_DIFFICULTY, ACTION_TYPE, CHARACTERISTIC_LABELS, getSkillLabel } from "../config.mjs";
 import { approveAction as socketApproveAction } from "../socket.mjs";
 import { loadActiveTest } from "../data/montage-test.mjs";
 
@@ -72,14 +72,14 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
     let characteristicDisplay = null;
     if (pending.characteristic) {
       const actor = game.actors.get(this.#actorId);
-      const chrName = game.i18n.localize(`DRAW_STEEL.characteristics.${pending.characteristic}.full`);
+      const chrName = CHARACTERISTIC_LABELS[pending.characteristic] ?? pending.characteristic;
       const chrValue = actor?.system?.characteristics?.[pending.characteristic]?.value ?? 0;
       characteristicLabel = chrName;
       characteristicDisplay = `${chrName} (${chrValue >= 0 ? "+" : ""}${chrValue})`;
     }
     let skillLabel = null;
     if (pending.skill) {
-      skillLabel = game.i18n.localize(`DRAW_STEEL.SKILL.List.${pending.skill}`);
+      skillLabel = getSkillLabel(pending.skill);
     }
 
     const isRoll = pending.type === ACTION_TYPE.ROLL;
@@ -88,9 +88,9 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
     const isNothing = pending.type === ACTION_TYPE.NOTHING;
 
     // Difficulties for the dropdown
-    const difficulties = Object.entries(TEST_DIFFICULTY).map(([key, value]) => ({
+    const difficulties = Object.entries(TEST_DIFFICULTY).map(([, value]) => ({
       value,
-      label: game.i18n.localize(`MONTAGE.TestDifficulty.${key.charAt(0).toUpperCase() + key.slice(1)}`),
+      label: game.i18n.localize(`MONTAGE.TestDifficulty.${value.charAt(0).toUpperCase() + value.slice(1)}`),
       selected: value === "medium",
     }));
 

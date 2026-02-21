@@ -59,6 +59,27 @@ export const MONTAGE_OUTCOME = {
 };
 
 /**
+ * Characteristic labels — hardcoded to avoid dependency on Draw Steel system i18n structure.
+ */
+export const CHARACTERISTIC_LABELS = {
+  might: "Might",
+  agility: "Agility",
+  reason: "Reason",
+  intuition: "Intuition",
+  presence: "Presence",
+};
+
+/**
+ * Look up a skill label from the Draw Steel system's translations.
+ * Falls back to the raw key if the system translations aren't available.
+ * @param {string} key - The skill key (e.g. "Culture", "Climb")
+ * @returns {string}
+ */
+export function getSkillLabel(key) {
+  return game.i18n.translations?.DRAW_STEEL?.SKILL?.List?.[key] ?? key;
+}
+
+/**
  * Power roll tier boundaries (2d10 + characteristic)
  * Tier 1: ≤ 11
  * Tier 2: 12–16

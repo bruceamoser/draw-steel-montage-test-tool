@@ -759,6 +759,47 @@
   font-weight: 600;
 }
 
+.montage-approval-roll-info {
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--montage-radius);
+  border-left: 3px solid var(--montage-info);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.montage-approval-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.montage-approval-field-label {
+  color: var(--montage-text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.montage-approval-field-value {
+  font-weight: 600;
+  color: var(--montage-info);
+}
+
+.montage-difficulty-hint {
+  font-size: 11px;
+  color: var(--montage-text-dim);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+.montage-difficulty-hint strong {
+  color: var(--montage-text);
+}
+
 .montage-approval-footer {
   display: flex;
   gap: 8px;
