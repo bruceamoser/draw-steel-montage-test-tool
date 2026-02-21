@@ -89,6 +89,7 @@ export function createActionData(options) {
     tier: options.tier ?? null,
     outcome: options.outcome ?? null,
     isSuccess: options.isSuccess ?? null,
+    abilityName: options.abilityName ?? null,
     aidTarget: options.aidTarget ?? null,
     aidResult: options.aidResult ?? null,
     autoSuccesses: options.autoSuccesses ?? 0,

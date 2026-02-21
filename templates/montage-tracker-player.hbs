@@ -11,6 +11,14 @@
     </div>
   </header>
 
+  {{!-- Paused Banner --}}
+  {{#if isPaused}}
+  <div class="montage-paused-banner">
+    <i class="fa-solid fa-pause-circle"></i>
+    <span>{{localize "MONTAGE.Player.Paused"}}</span>
+  </div>
+  {{/if}}
+
   {{!-- Progress Bars --}}
   <div class="montage-progress-section">
     <div class="montage-progress-group">
@@ -94,6 +102,18 @@
       </div>
     </div>
 
+    <div class="ability-fields-group" style="display: none;">
+      <div class="form-group">
+        <label for="abilityId">{{localize "MONTAGE.Player.Ability"}}</label>
+        <select name="abilityId">
+          <option value="">— {{localize "MONTAGE.Player.SelectAbility"}} —</option>
+          {{#each abilities}}
+          <option value="{{this.value}}">{{this.label}}</option>
+          {{/each}}
+        </select>
+      </div>
+    </div>
+
     <button type="button" class="montage-btn-primary" data-action="submitAction">
       <i class="fa-solid fa-paper-plane"></i> {{localize "MONTAGE.Player.Submit"}}
     </button>
@@ -110,6 +130,12 @@
   <div class="montage-waiting">
     <i class="fa-solid fa-check-circle fa-2x montage-done-icon"></i>
     <p>{{localize "MONTAGE.Player.AlreadyActed"}}</p>
+  </div>
+
+  {{else if isPaused}}
+  <div class="montage-waiting">
+    <i class="fa-solid fa-pause-circle fa-2x"></i>
+    <p>{{localize "MONTAGE.Player.Paused"}}</p>
   </div>
   {{/if}}
 

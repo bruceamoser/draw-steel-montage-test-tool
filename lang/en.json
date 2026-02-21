@@ -5,6 +5,7 @@
 
   "MONTAGE.Status.Setup": "Setup",
   "MONTAGE.Status.Active": "Active",
+  "MONTAGE.Status.Paused": "Paused",
   "MONTAGE.Status.Resolved": "Resolved",
 
   "MONTAGE.Difficulty.Easy": "Easy",
@@ -19,6 +20,9 @@
   "MONTAGE.Action.Aid": "Assist Another Hero",
   "MONTAGE.Action.Ability": "Use an Ability",
   "MONTAGE.Action.Nothing": "Do Nothing",
+  "MONTAGE.Action.Pause": "Pause Test",
+  "MONTAGE.Action.Resume": "Resume Test",
+  "MONTAGE.Action.Abandon": "Abandon Test",
 
   "MONTAGE.Outcome.TotalSuccess": "Total Success",
   "MONTAGE.Outcome.PartialSuccess": "Partial Success",
@@ -106,6 +110,7 @@
   "MONTAGE.Approval.GMNotesPlaceholder": "Optional notes about this action",
   "MONTAGE.Approval.Approve": "Approve",
   "MONTAGE.Approval.Reject": "Reject",
+  "MONTAGE.Approval.AbilityName": "Ability",
   "MONTAGE.Approval.NoPending": "No pending action to approve.",
 
   "MONTAGE.Player.ChooseAction": "Choose Your Action",
@@ -117,11 +122,14 @@
   "MONTAGE.Player.SelectCharacteristic": "Select a characteristic",
   "MONTAGE.Player.Skill": "Skill (Optional)",
   "MONTAGE.Player.NoSkill": "None",
+  "MONTAGE.Player.Ability": "Ability",
+  "MONTAGE.Player.SelectAbility": "Select an ability",
   "MONTAGE.Player.Submit": "Submit Action",
   "MONTAGE.Player.WaitingApproval": "Waiting for the Director's approval…",
   "MONTAGE.Player.SubmittedAs": "Submitted as:",
   "MONTAGE.Player.AlreadyActed": "You have already acted this round.",
   "MONTAGE.Player.PreviousActions": "Previous Actions",
+  "MONTAGE.Player.Paused": "The montage test is currently paused by the Director.",
   "MONTAGE.Player.NoHero": "You don't control a hero in this montage test.",
   "MONTAGE.Player.TestNotActive": "The montage test is not currently active.",
   "MONTAGE.Player.NoTest": "No montage test is running.",
@@ -142,6 +150,8 @@
   "MONTAGE.Confirm.EndTestMsg": "Are you sure you want to end the montage test early? The outcome will be evaluated based on current tallies.",
   "MONTAGE.Confirm.RemoveAction": "Remove Action",
   "MONTAGE.Confirm.RemoveActionMsg": "Remove {name}'s action from this round? Any success or failure tallies from this action will be reversed.",
+  "MONTAGE.Confirm.AbandonTest": "Abandon Test",
+  "MONTAGE.Confirm.AbandonTestMsg": "Are you sure you want to abandon this montage test? All progress will be lost.",
 
   "MONTAGE.Notify.ActionSubmitted": "Your action has been submitted for approval.",
   "MONTAGE.Notify.ActionApproved": "{name}'s action has been approved.",
@@ -152,6 +162,9 @@
   "MONTAGE.Notify.RoundAdvanced": "A new round has begun.",
   "MONTAGE.Notify.ActiveTestExists": "There is an active montage test: {name}",
   "MONTAGE.Notify.TestArchived": "The montage test has been archived.",
+  "MONTAGE.Notify.TestPaused": "The montage test has been paused.",
+  "MONTAGE.Notify.TestResumed": "The montage test has resumed!",
+  "MONTAGE.Notify.TestAbandoned": "The montage test has been abandoned.",
   "MONTAGE.Notify.SetupSaved": "Montage setup saved.",
   "MONTAGE.Notify.PlayerActionRejected": "The Director has rejected your action. Please choose a different approach.",
 

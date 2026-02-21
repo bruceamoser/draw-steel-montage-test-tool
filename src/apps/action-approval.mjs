@@ -82,6 +82,9 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
       skillLabel = getSkillLabel(pending.skill);
     }
 
+    // Ability name if present
+    const abilityName = pending.abilityName ?? null;
+
     const isRoll = pending.type === ACTION_TYPE.ROLL;
     const isAid = pending.type === ACTION_TYPE.AID;
     const isAbility = pending.type === ACTION_TYPE.ABILITY;
@@ -114,6 +117,8 @@ export class ActionApprovalApp extends HandlebarsApplicationMixin(ApplicationV2)
       isAbility,
       isNothing,
       needsDifficulty: isRoll || isAid,
+      abilityName,
+      hasAbilityName: !!abilityName,
       needsAutoSuccesses: isAbility,
       difficulties,
     };

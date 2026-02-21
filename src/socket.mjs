@@ -2,6 +2,7 @@ import { MODULE_ID, SOCKET_NAME, SOCKET_EVENTS, TEST_STATUS, ACTION_TYPE, CHARAC
 import {
   loadActiveTest,
   saveActiveTest,
+  clearActiveTest,
   createActionData,
   createRoundData,
 } from "./data/montage-test.mjs";
@@ -117,6 +118,15 @@ export function initSocket() {
 
       case SOCKET_EVENTS.MONTAGE_ACTIVATED:
         // Handled by module.mjs for UI management
+        break;
+
+      case SOCKET_EVENTS.MONTAGE_PAUSED:
+      case SOCKET_EVENTS.MONTAGE_RESUMED:
+        notifyStateListeners(data);
+        break;
+
+      case SOCKET_EVENTS.MONTAGE_ABANDONED:
+        notifyStateListeners(null);
         break;
 
       default:
@@ -236,6 +246,7 @@ export async function approveAction(actorId, approvalData = {}) {
       actorId: pending.actorId,
       type: ACTION_TYPE.ABILITY,
       description: pending.description,
+      abilityName: pending.abilityName ?? null,
       autoSuccesses,
       isSuccess: autoSuccesses > 0,
       approved: true,
@@ -608,4 +619,60 @@ export async function advanceRound() {
     round: testData.currentRound,
     max: testData.maxRounds,
   }));
+}
+
+/**
+ * GM pauses an active montage test.
+ */
+export async function pauseTest() {
+  const testData = loadActiveTest();
+  if (!testData || testData.status !== TEST_STATUS.ACTIVE) return;
+
+  testData.status = TEST_STATUS.PAUSED;
+  await saveActiveTest(testData);
+
+  broadcastState(testData);
+  game.socket.emit(SOCKET_NAME, {
+    event: SOCKET_EVENTS.MONTAGE_PAUSED,
+    data: testData,
+  });
+
+  ui.notifications.info(game.i18n.localize("MONTAGE.Notify.TestPaused"));
+}
+
+/**
+ * GM resumes a paused montage test.
+ */
+export async function resumeTest() {
+  const testData = loadActiveTest();
+  if (!testData || testData.status !== TEST_STATUS.PAUSED) return;
+
+  testData.status = TEST_STATUS.ACTIVE;
+  await saveActiveTest(testData);
+
+  broadcastState(testData);
+  game.socket.emit(SOCKET_NAME, {
+    event: SOCKET_EVENTS.MONTAGE_RESUMED,
+    data: testData,
+  });
+
+  ui.notifications.info(game.i18n.localize("MONTAGE.Notify.TestResumed"));
+}
+
+/**
+ * GM abandons a montage test entirely (clears it without resolving).
+ */
+export async function abandonTest() {
+  const testData = loadActiveTest();
+  if (!testData || (testData.status !== TEST_STATUS.ACTIVE && testData.status !== TEST_STATUS.PAUSED)) return;
+
+  await clearActiveTest();
+
+  broadcastState(null);
+  game.socket.emit(SOCKET_NAME, {
+    event: SOCKET_EVENTS.MONTAGE_ABANDONED,
+    data: null,
+  });
+
+  ui.notifications.info(game.i18n.localize("MONTAGE.Notify.TestAbandoned"));
 }

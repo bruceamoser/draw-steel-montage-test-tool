@@ -42,9 +42,11 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
   /** @override */
   async _prepareContext(options) {
     const testData = loadActiveTest();
-    if (!testData || testData.status !== TEST_STATUS.ACTIVE) {
-      return { hasTest: false, isActive: false };
+    if (!testData || (testData.status !== TEST_STATUS.ACTIVE && testData.status !== TEST_STATUS.PAUSED)) {
+      return { hasTest: false, isActive: false, isPaused: false };
     }
+
+    const isPaused = testData.status === TEST_STATUS.PAUSED;
 
     // Identify which hero(es) this player controls
     const controlledHeroes = testData.heroes.filter((h) => {
@@ -53,7 +55,7 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
     });
 
     if (controlledHeroes.length === 0) {
-      return { hasTest: true, isActive: true, hasHero: false };
+      return { hasTest: true, isActive: true, isPaused, hasHero: false };
     }
 
     // For simplicity, use the first controlled hero
@@ -109,18 +111,36 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
       { value: ACTION_TYPE.NOTHING, label: game.i18n.localize("MONTAGE.Action.Nothing") },
     ];
 
-    // Build characteristic options from the hero actor
+    // Build skill options from the hero's actual skills (not all Draw Steel skills)
     const actor = game.actors.get(actorId);
+    const actorSkills = actor?.system?.hero?.skills;
+    let skillKeys = [];
+    if (actorSkills) {
+      // Handle Set, Array, or iterable
+      try {
+        skillKeys = Array.from(actorSkills);
+      } catch {
+        // Fallback for plain objects
+        if (typeof actorSkills === "object") {
+          skillKeys = Object.keys(actorSkills);
+        }
+      }
+    }
+    const skills = skillKeys
+      .map((key) => ({ value: key, label: getSkillLabel(key) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    // Build ability options from the hero's embedded ability items
+    const abilities = (actor?.items ?? [])
+      .filter((i) => i.type === "ability")
+      .map((i) => ({ value: i.id, label: i.name }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    // Build characteristic options from the hero actor
     const characteristics = Object.entries(CHARACTERISTIC_LABELS).map(([key, name]) => {
       const value = actor?.system?.characteristics?.[key]?.value ?? 0;
       return { value: key, label: `${name} (${value >= 0 ? "+" : ""}${value})`, modifier: value };
     });
-
-    // Build skill options from Draw Steel i18n
-    const skillListRaw = game.i18n.translations?.DRAW_STEEL?.SKILL?.List ?? {};
-    const skills = Object.entries(skillListRaw)
-      .map(([key, label]) => ({ value: key, label: typeof label === "string" ? label : key }))
-      .sort((a, b) => a.label.localeCompare(b.label));
 
     // Progress percentages
     const successPct = testData.successLimit > 0
@@ -137,7 +157,8 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
 
     return {
       hasTest: true,
-      isActive: true,
+      isActive: true,  // True for both active and paused (player sees the tracker)
+      isPaused,
       hasHero: true,
       actorId,
       heroName: hero.name,
@@ -158,10 +179,12 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
             `MONTAGE.Action.${pendingAction.type.charAt(0).toUpperCase() + pendingAction.type.slice(1)}`,
           )
         : "",
-      canAct: !hasActed && !pendingAction,
+      canAct: !hasActed && !pendingAction && !isPaused,
       actionTypes,
       characteristics,
       skills,
+      abilities,
+      hasAbilities: abilities.length > 0,
       otherHeroes,
       hasOtherHeroes: otherHeroes.length > 0,
       pastActions,
@@ -183,15 +206,18 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
       this.#unsubState = onStateUpdate(() => this.render());
     }
 
-    // Toggle aid-target and roll-fields visibility based on action type selection
+    // Toggle aid-target, roll-fields, and ability-fields visibility based on action type selection
     const actionSelect = this.element.querySelector('[name="actionType"]');
     const aidGroup = this.element.querySelector(".aid-target-group");
     const rollFields = this.element.querySelector(".roll-fields-group");
+    const abilityFields = this.element.querySelector(".ability-fields-group");
     if (actionSelect) {
       const toggle = () => {
         const isRollOrAid = actionSelect.value === ACTION_TYPE.ROLL || actionSelect.value === ACTION_TYPE.AID;
+        const isAbility = actionSelect.value === ACTION_TYPE.ABILITY;
         if (aidGroup) aidGroup.style.display = actionSelect.value === ACTION_TYPE.AID ? "" : "none";
         if (rollFields) rollFields.style.display = isRollOrAid ? "" : "none";
+        if (abilityFields) abilityFields.style.display = isAbility ? "" : "none";
       };
       toggle();
       actionSelect.addEventListener("change", toggle);
@@ -217,6 +243,8 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
     const aidTarget = form.querySelector('[name="aidTarget"]')?.value || null;
     const characteristic = form.querySelector('[name="characteristic"]')?.value || null;
     const skill = form.querySelector('[name="skill"]')?.value || null;
+    const abilitySelect = form.querySelector('[name="abilityId"]');
+    const abilityId = abilitySelect?.value || null;
 
     if (!actorId || !actionType) {
       ui.notifications.warn(game.i18n.localize("MONTAGE.Warn.SelectAction"));
@@ -229,12 +257,21 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
       return;
     }
 
+    // Look up the ability name from the selected ability item
+    let abilityName = null;
+    if (actionType === ACTION_TYPE.ABILITY && abilityId) {
+      const actor = game.actors.get(actorId);
+      const abilityItem = actor?.items?.get(abilityId);
+      abilityName = abilityItem?.name ?? null;
+    }
+
     await submitAction({
       actorId,
       type: actionType,
       aidTarget: actionType === ACTION_TYPE.AID ? aidTarget : null,
       characteristic: isRollOrAid ? characteristic : null,
       skill: isRollOrAid ? skill : null,
+      abilityName: actionType === ACTION_TYPE.ABILITY ? abilityName : null,
     });
 
     ui.notifications.info(game.i18n.localize("MONTAGE.Notify.ActionSubmitted"));

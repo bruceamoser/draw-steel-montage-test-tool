@@ -20,6 +20,14 @@
   </div>
   {{/if}}
 
+  {{!-- Ability Name --}}
+  {{#if hasAbilityName}}
+  <div class="form-group">
+    <label>{{localize "MONTAGE.Approval.AbilityName"}}</label>
+    <span class="montage-approval-value">{{abilityName}}</span>
+  </div>
+  {{/if}}
+
   {{!-- Aid Target --}}
   {{#if aidTargetName}}
   <div class="form-group">

@@ -18,6 +18,7 @@ export const FLAGS = {
 export const TEST_STATUS = {
   SETUP: "setup",
   ACTIVE: "active",
+  PAUSED: "paused",
   RESOLVED: "resolved",
 };
 
@@ -142,6 +143,9 @@ export const SOCKET_EVENTS = {
   ROUND_ADVANCED: "roundAdvanced",
   TEST_RESOLVED: "testResolved",
   MONTAGE_ACTIVATED: "montageActivated",
+  MONTAGE_PAUSED: "montagePaused",
+  MONTAGE_RESUMED: "montageResumed",
+  MONTAGE_ABANDONED: "montageAbandoned",
 };
 
 /**

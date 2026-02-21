@@ -11,6 +11,9 @@ import {
   approveAction,
   rejectAction,
   removeAction,
+  pauseTest,
+  resumeTest,
+  abandonTest,
 } from "../socket.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -59,6 +62,9 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
       removeAction: MontageTrackerGMApp.#onRemoveAction,
       archiveTest: MontageTrackerGMApp.#onArchiveTest,
       newTest: MontageTrackerGMApp.#onNewTest,
+      pauseTest: MontageTrackerGMApp.#onPauseTest,
+      resumeTest: MontageTrackerGMApp.#onResumeTest,
+      abandonTest: MontageTrackerGMApp.#onAbandonTest,
     },
   };
 
@@ -98,6 +104,7 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
         typeLabel: game.i18n.localize(`MONTAGE.Action.${p.type.charAt(0).toUpperCase() + p.type.slice(1)}`),
         chrLabel,
         skillLabel,
+        abilityName: p.abilityName ?? null,
       };
     });
 
@@ -121,6 +128,7 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
         aidResultLabel: a.aidResult ? game.i18n.localize(`MONTAGE.Assist.${a.aidResult.charAt(0).toUpperCase() + a.aidResult.slice(1)}`) : "",
         chrLabel,
         skillLabel,
+        abilityName: a.abilityName ?? null,
       };
     });
 
@@ -143,7 +151,9 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
       test: testData,
       isSetup: testData.status === TEST_STATUS.SETUP,
       isActive: testData.status === TEST_STATUS.ACTIVE,
+      isPaused: testData.status === TEST_STATUS.PAUSED,
       isResolved: testData.status === TEST_STATUS.RESOLVED,
+      isActiveOrPaused: testData.status === TEST_STATUS.ACTIVE || testData.status === TEST_STATUS.PAUSED,
       currentRound,
       roundActions,
       heroesWaiting: heroesWaiting.map((h) => ({
@@ -335,5 +345,21 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
     const { MontageConfigApp } = await import("./montage-config.mjs");
     new MontageConfigApp().render({ force: true });
     this.close();
+  }
+
+  static async #onPauseTest() {
+    await pauseTest();
+  }
+
+  static async #onResumeTest() {
+    await resumeTest();
+  }
+
+  static async #onAbandonTest() {
+    const confirm = await Dialog.confirm({
+      title: game.i18n.localize("MONTAGE.Confirm.AbandonTest"),
+      content: `<p>${game.i18n.localize("MONTAGE.Confirm.AbandonTestMsg")}</p>`,
+    });
+    if (confirm) await abandonTest();
   }
 }
