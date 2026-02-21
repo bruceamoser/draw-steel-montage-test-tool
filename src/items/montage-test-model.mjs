@@ -64,6 +64,16 @@ export function computeOutcome({ successes, failures, successLimit, failureLimit
  */
 export class MontageTestDataModel extends foundry.abstract.TypeDataModel {
 
+  /**
+   * Metadata consumed by Draw Steel's createDialog filter:
+   *   types.filter(t => !CONFIG.Item.dataModels[t].metadata?.packOnly)
+   * packOnly: false — this type should appear in the world Create Item dialog.
+   */
+  static metadata = {
+    packOnly: false,
+    invalidActorTypes: [],
+  };
+
   /** @override */
   static defineSchema() {
     const fields = foundry.data.fields;

@@ -1,7 +1,7 @@
 /**
  * Draw Steel Montage Test Tool
  * Main module entry point — registers hooks, socket, settings, and scene controls.
- * v0.3.8
+ * v0.3.9
  */
 import { MODULE_ID, SYSTEM_ID } from "./config.mjs";
 import { MontageAPI } from "./api/montage-api.mjs";
@@ -38,52 +38,6 @@ function _patchDocumentTypeFieldValidation() {
   };
   DocumentTypeField.prototype[_DOC_TYPE_FIELD_PATCHED] = true;
   log(`Patched DocumentTypeField._validateType to allow ${type}`);
-}
-
-const _TYPES_PATCHED = Symbol.for(`${MODULE_ID}.patchedItemTypes`);
-
-/**
- * Override DrawSteelItem.TYPES (the static getter used by createDialog) to
- * include montageTest so it appears in the Create Item dropdown.
- */
-function _patchItemDocumentClassTypes() {
-  const type = MONTAGE_TEST_ITEM_TYPE;
-  const cls = CONFIG.Item?.documentClass;
-  if (!cls || cls[_TYPES_PATCHED]) return false;
-
-  // Walk up to find any existing TYPES getter so we can call through to it.
-  let owner = cls;
-  while (owner && !Object.prototype.hasOwnProperty.call(owner, "TYPES")) {
-    owner = Object.getPrototypeOf(owner);
-  }
-  const originalDescriptor = owner ? Object.getOwnPropertyDescriptor(owner, "TYPES") : null;
-  const originalGetter = originalDescriptor?.get ?? null;
-  const originalValue  = !originalGetter ? originalDescriptor?.value : null;
-
-  Object.defineProperty(cls, "TYPES", {
-    configurable: true,
-    get() {
-      let base;
-      try {
-        base = originalGetter ? originalGetter.call(this)
-          : Array.isArray(originalValue) ? originalValue
-          : originalValue instanceof Set  ? Array.from(originalValue)
-          : originalValue != null          ? Object.keys(originalValue)
-          : [];
-      } catch {
-        base = [];
-      }
-      // Normalise to a fresh mutable array.
-      const arr = Array.isArray(base) ? [...base]
-        : base instanceof Set          ? Array.from(base)
-        : Object.keys(base ?? {});
-      if (!arr.includes(type)) arr.push(type);
-      return arr;
-    },
-  });
-
-  cls[_TYPES_PATCHED] = true;
-  return true;
 }
 
 /**
@@ -125,8 +79,8 @@ function _ensureMontageTestAllowedItemType() {
     }
   } catch { /* ignore */ }
 
-  // 4. Patch the TYPES static getter so the Create Item dialog lists our type.
-  try { _patchItemDocumentClassTypes(); } catch { /* ignore */ }
+  // 4. module.json documentTypes declaration makes the type appear in the
+  //    Create Item dialog natively — no TYPES getter patch needed.
 
   log(`Registered allowed Item type: ${type}`);
 }
