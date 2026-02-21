@@ -81,9 +81,9 @@
       <span class="montage-limit-label">{{localize "MONTAGE.Config.HeroCount"}}:</span>
       <span class="montage-limit-value" data-hero-count>{{heroCount}}</span>
       <span class="montage-limit-label">{{localize "MONTAGE.Config.SuccessLimit"}}:</span>
-      <span class="montage-limit-value" data-limit="success">{{successLimit}}</span>
+      <input type="number" class="montage-limit-input" name="successLimit" data-limit="success" value="{{successLimit}}" min="1" />
       <span class="montage-limit-label">{{localize "MONTAGE.Config.FailureLimit"}}:</span>
-      <span class="montage-limit-value" data-limit="failure">{{failureLimit}}</span>
+      <input type="number" class="montage-limit-input" name="failureLimit" data-limit="failure" value="{{failureLimit}}" min="1" />
     </div>
   </div>
 

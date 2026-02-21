@@ -27,12 +27,9 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
       width: 500,
       height: 550,
     },
-    form: {
-      handler: MontageTrackerPlayerApp.#onSubmitAction,
-      submitOnChange: false,
-      closeOnSubmit: false,
+    actions: {
+      submitAction: MontageTrackerPlayerApp.#onSubmitAction,
     },
-    actions: {},
   };
 
   /** @override */
@@ -195,12 +192,12 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
   /**
    * Submit the player's chosen action.
    */
-  static async #onSubmitAction(event, form, formData) {
-    const data = formData.object;
-    const actorId = data.actorId;
-    const actionType = data.actionType;
-    const description = data.description ?? "";
-    const aidTarget = data.aidTarget ?? null;
+  static async #onSubmitAction(event, target) {
+    const form = this.element.querySelector('.montage-action-form');
+    const actorId = form.querySelector('[name="actorId"]')?.value;
+    const actionType = form.querySelector('[name="actionType"]')?.value;
+    const description = form.querySelector('[name="description"]')?.value ?? "";
+    const aidTarget = form.querySelector('[name="aidTarget"]')?.value || null;
 
     if (!actorId || !actionType) {
       ui.notifications.warn(game.i18n.localize("MONTAGE.Warn.SelectAction"));

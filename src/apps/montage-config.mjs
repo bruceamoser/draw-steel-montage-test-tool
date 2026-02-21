@@ -71,6 +71,8 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
     name: "",
     difficulty: MONTAGE_DIFFICULTY.MODERATE,
     selectedHeroIds: null, // null = uninitialised → default to all
+    customSuccessLimit: null,
+    customFailureLimit: null,
   };
 
   #phase1Initialized = false;
@@ -140,6 +142,8 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
       this.#phase1Data.selectedHeroIds = new Set(availableHeroes.map((h) => h.actorId));
       this.#phase1Data.name = "";
       this.#phase1Data.difficulty = MONTAGE_DIFFICULTY.MODERATE;
+      this.#phase1Data.customSuccessLimit = null;
+      this.#phase1Data.customFailureLimit = null;
       this.#phase1Initialized = true;
     }
 
@@ -159,8 +163,8 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
         selected: value === this.#phase1Data.difficulty,
       })),
       heroCount,
-      successLimit: limits.successLimit,
-      failureLimit: limits.failureLimit,
+      successLimit: this.#phase1Data.customSuccessLimit ?? limits.successLimit,
+      failureLimit: this.#phase1Data.customFailureLimit ?? limits.failureLimit,
     };
   }
 
@@ -233,6 +237,18 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
       nameInput?.addEventListener("input", () => {
         this.#phase1Data.name = nameInput.value;
       });
+
+      // Sync editable limit inputs
+      const successInput = this.element.querySelector('input[name="successLimit"]');
+      const failureInput = this.element.querySelector('input[name="failureLimit"]');
+      successInput?.addEventListener("change", () => {
+        const val = parseInt(successInput.value);
+        this.#phase1Data.customSuccessLimit = isNaN(val) || val < 1 ? null : val;
+      });
+      failureInput?.addEventListener("change", () => {
+        const val = parseInt(failureInput.value);
+        this.#phase1Data.customFailureLimit = isNaN(val) || val < 1 ? null : val;
+      });
     }
   }
 
@@ -247,12 +263,17 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
     const heroCount = this.#phase1Data.selectedHeroIds.size;
     const limits = calculateLimits(this.#phase1Data.difficulty, heroCount || 1);
 
-    const successEl = this.element.querySelector('[data-limit="success"]');
-    const failureEl = this.element.querySelector('[data-limit="failure"]');
+    const successEl = this.element.querySelector('input[data-limit="success"]');
+    const failureEl = this.element.querySelector('input[data-limit="failure"]');
     const countEl = this.element.querySelector('[data-hero-count]');
 
-    if (successEl) successEl.textContent = limits.successLimit;
-    if (failureEl) failureEl.textContent = limits.failureLimit;
+    // Only update values if the GM hasn't manually overridden them
+    if (successEl && this.#phase1Data.customSuccessLimit === null) {
+      successEl.value = limits.successLimit;
+    }
+    if (failureEl && this.#phase1Data.customFailureLimit === null) {
+      failureEl.value = limits.failureLimit;
+    }
     if (countEl) countEl.textContent = heroCount;
   }
 
@@ -327,12 +348,32 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
       return;
     }
 
-    const testData = createMontageTestData({
+    // Read custom limits — sync from DOM in case they were edited
+    const successInput = this.element?.querySelector('input[name="successLimit"]');
+    const failureInput = this.element?.querySelector('input[name="failureLimit"]');
+    if (successInput) {
+      const val = parseInt(successInput.value);
+      this.#phase1Data.customSuccessLimit = isNaN(val) || val < 1 ? null : val;
+    }
+    if (failureInput) {
+      const val = parseInt(failureInput.value);
+      this.#phase1Data.customFailureLimit = isNaN(val) || val < 1 ? null : val;
+    }
+
+    const createOptions = {
       name,
       difficulty,
       heroCount: heroes.length,
       heroes,
-    });
+    };
+    if (this.#phase1Data.customSuccessLimit !== null) {
+      createOptions.successLimit = this.#phase1Data.customSuccessLimit;
+    }
+    if (this.#phase1Data.customFailureLimit !== null) {
+      createOptions.failureLimit = this.#phase1Data.customFailureLimit;
+    }
+
+    const testData = createMontageTestData(createOptions);
 
     await saveDraftTest(testData);
     ui.notifications.info(game.i18n.format("MONTAGE.Notify.TestCreated", { name: testData.name }));
