@@ -2,7 +2,7 @@
  * Draw Steel Montage Test Tool
  * Main module entry point — registers hooks, socket, settings, and scene controls.
  */
-import { MODULE_ID } from "./config.mjs";
+import { MODULE_ID, FLAGS } from "./config.mjs";
 import { initSocket } from "./socket.mjs";
 import { loadActiveTest } from "./data/montage-test.mjs";
 import { MontageAPI } from "./api/montage-api.mjs";
@@ -13,6 +13,23 @@ import { MontageAPI } from "./api/montage-api.mjs";
 Hooks.once("init", () => {
   console.log(`${MODULE_ID} | Initializing Draw Steel Montage Test Tool`);
 
+  // Register world-scoped settings for persistence
+  game.settings.register(MODULE_ID, FLAGS.ACTIVE_TEST, {
+    name: "Active Montage Test",
+    scope: "world",
+    config: false,
+    type: Object,
+    default: null,
+  });
+
+  game.settings.register(MODULE_ID, FLAGS.COMPLETED_TESTS, {
+    name: "Completed Montage Tests",
+    scope: "world",
+    config: false,
+    type: Array,
+    default: [],
+  });
+
   // Preload Handlebars templates
   const templates = [
     `modules/${MODULE_ID}/templates/montage-config.hbs`,
@@ -22,7 +39,7 @@ Hooks.once("init", () => {
     `modules/${MODULE_ID}/templates/chat/round-summary.hbs`,
     `modules/${MODULE_ID}/templates/chat/test-complete.hbs`,
   ];
-  loadTemplates(templates);
+  foundry.applications.handlebars.loadTemplates(templates);
 
   // Register Handlebars helper: equality comparison
   Handlebars.registerHelper("eq", function (a, b) {

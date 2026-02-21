@@ -96,26 +96,26 @@ export function createActionData(options) {
 }
 
 /**
- * Save the active montage test to world flags.
+ * Save the active montage test to world settings.
  * @param {object} testData
  */
 export async function saveActiveTest(testData) {
-  await game.world.setFlag(MODULE_ID, FLAGS.ACTIVE_TEST, testData);
+  await game.settings.set(MODULE_ID, FLAGS.ACTIVE_TEST, testData);
 }
 
 /**
- * Load the active montage test from world flags.
+ * Load the active montage test from world settings.
  * @returns {object|null}
  */
 export function loadActiveTest() {
-  return game.world.getFlag(MODULE_ID, FLAGS.ACTIVE_TEST) ?? null;
+  return game.settings.get(MODULE_ID, FLAGS.ACTIVE_TEST) ?? null;
 }
 
 /**
- * Clear the active montage test from world flags.
+ * Clear the active montage test from world settings.
  */
 export async function clearActiveTest() {
-  await game.world.unsetFlag(MODULE_ID, FLAGS.ACTIVE_TEST);
+  await game.settings.set(MODULE_ID, FLAGS.ACTIVE_TEST, null);
 }
 
 /**
@@ -123,12 +123,12 @@ export async function clearActiveTest() {
  * @param {object} testData
  */
 export async function archiveTest(testData) {
-  const completed = game.world.getFlag(MODULE_ID, FLAGS.COMPLETED_TESTS) ?? [];
+  const completed = game.settings.get(MODULE_ID, FLAGS.COMPLETED_TESTS) ?? [];
   completed.push({
     ...testData,
     completedAt: Date.now(),
   });
-  await game.world.setFlag(MODULE_ID, FLAGS.COMPLETED_TESTS, completed);
+  await game.settings.set(MODULE_ID, FLAGS.COMPLETED_TESTS, completed);
 }
 
 /**
