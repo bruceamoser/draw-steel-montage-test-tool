@@ -2,7 +2,7 @@
  * Montage Test Item Sheet
  */
 
-import { MODULE_ID, MONTAGE_DIFFICULTY, DIFFICULTY_TABLE_BASE, BASE_HERO_COUNT, MIN_LIMIT, SOCKET_NAME, SOCKET_EVENTS } from "../config.mjs";
+import { MODULE_ID, MONTAGE_DIFFICULTY, DIFFICULTY_TABLE_BASE, BASE_HERO_COUNT, MIN_LIMIT } from "../config.mjs";
 import {
   MONTAGE_TEST_ITEM_TYPE,
   MONTAGE_TEST_OUTCOME,
@@ -65,14 +65,13 @@ export class MontageTestSheet extends ItemSheetV1 {
     const enrichOpts = { relativeTo: this.item };
     const descriptionEnriched = await TE.enrichHTML(system.description ?? "", enrichOpts);
     const outcomesEnriched = {
-      totalSuccess: await TE.enrichHTML(system.outcomes?.totalSuccess ?? "", enrichOpts),
-      partialSuccess: await TE.enrichHTML(system.outcomes?.partialSuccess ?? "", enrichOpts),
-      totalFailure: await TE.enrichHTML(system.outcomes?.totalFailure ?? "", enrichOpts),
+      round1: await TE.enrichHTML(system.outcomes?.round1 ?? "", enrichOpts),
+      round2: await TE.enrichHTML(system.outcomes?.round2 ?? "", enrichOpts),
     };
-    const round1Raw = system.complications?.round1 ?? [];
-    const round2Raw = system.complications?.round2 ?? [];
-    const round1Enriched = await Promise.all(round1Raw.map((t) => TE.enrichHTML(t ?? "", enrichOpts)));
-    const round2Enriched = await Promise.all(round2Raw.map((t) => TE.enrichHTML(t ?? "", enrichOpts)));
+    const complicationsEnriched = {
+      round1: await TE.enrichHTML(system.complications?.round1 ?? "", enrichOpts),
+      round2: await TE.enrichHTML(system.complications?.round2 ?? "", enrichOpts),
+    };
 
     return {
       ...data,
@@ -86,20 +85,7 @@ export class MontageTestSheet extends ItemSheetV1 {
       })),
       descriptionEnriched,
       outcomesEnriched,
-      complications: {
-        round1: round1Raw.map((text, index) => ({
-          index,
-          text,
-          textEnriched: round1Enriched[index],
-          targetName: `system.complications.round1.${index}`,
-        })),
-        round2: round2Raw.map((text, index) => ({
-          index,
-          text,
-          textEnriched: round2Enriched[index],
-          targetName: `system.complications.round2.${index}`,
-        })),
-      },
+      complicationsEnriched,
       participants: participants.map((p, index) => ({
         index,
         actorUuid: p.actorUuid,
@@ -153,20 +139,11 @@ export class MontageTestSheet extends ItemSheetV1 {
     if (!game.user.isGM) return;
 
     switch (action) {
-      case "addComplication":
-        return this.#addComplication(event.currentTarget.dataset.round);
-
-      case "removeComplication":
-        return this.#removeComplication(event.currentTarget.dataset.round, Number(event.currentTarget.dataset.index));
-
       case "addParticipant":
         return this.#addParticipant();
 
       case "removeParticipant":
         return this.#removeParticipant(Number(event.currentTarget.dataset.index));
-
-      case "openForPlayers":
-        return this.#openForPlayers();
 
       default:
         return;
@@ -193,21 +170,6 @@ export class MontageTestSheet extends ItemSheetV1 {
       "system.successLimit": successLimit,
       "system.failureLimit": failureLimit,
     });
-  }
-
-  async #addComplication(round) {
-    const r = round === "2" ? "round2" : "round1";
-    const list = Array.from(this.item.system.complications?.[r] ?? []);
-    list.push("");
-    await this.item.update({ [`system.complications.${r}`]: list });
-  }
-
-  async #removeComplication(round, index) {
-    const r = round === "2" ? "round2" : "round1";
-    const list = Array.from(this.item.system.complications?.[r] ?? []);
-    if (index < 0 || index >= list.length) return;
-    list.splice(index, 1);
-    await this.item.update({ [`system.complications.${r}`]: list });
   }
 
   async #addParticipant(partial = {}) {
@@ -240,28 +202,6 @@ export class MontageTestSheet extends ItemSheetV1 {
     participants.splice(index, 1);
     await this.item.update({ "system.participants": participants });
     await this.#recalcLimits();
-  }
-
-  /**
-   * Emit a socket event that instructs all connected players to open this item's sheet.
-   */
-  async #openForPlayers() {
-    // Grant Observer so the item appears in game.items for players
-    const newOwnership = {};
-    for (const user of game.users.filter((u) => !u.isGM)) {
-      if ((this.item.ownership[user.id] ?? CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE)
-          < CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER) {
-        newOwnership[user.id] = CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
-      }
-    }
-    if (Object.keys(newOwnership).length) {
-      await this.item.update({ ownership: { ...this.item.ownership, ...newOwnership } });
-    }
-    game.socket.emit(SOCKET_NAME, {
-      event: SOCKET_EVENTS.OPEN_ITEM_SHEET,
-      data: { itemId: this.item.id },
-    });
-    ui.notifications.info(game.i18n.localize("MONTAGE.Sheet.PushedToPlayers"));
   }
 
   async #onDropActor(event) {

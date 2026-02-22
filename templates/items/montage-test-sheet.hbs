@@ -2,18 +2,11 @@
 
   {{!-- ═══════════════════════════════════════════════════════ HEADER ══ --}}
   <div class="mts-header">
-
-    {{!-- Title row: name + push button --}}
     {{#if isGM}}
     <div class="mts-title-row">
       <input class="mts-name-input" name="name" type="text" value="{{item.name}}"
              placeholder="{{localize 'MONTAGE.Item.MontageTest'}}" />
-      <button type="button" class="mts-push-btn" data-action="openForPlayers">
-        <i class="fa-solid fa-share-from-square"></i> {{localize "MONTAGE.Sheet.OpenForPlayers"}}
-      </button>
     </div>
-
-    {{!-- Config row: difficulty + limits --}}
     <div class="mts-config-row">
       <label class="mts-label">{{localize "MONTAGE.Config.Difficulty"}}</label>
       <select class="mts-select" name="system.difficulty">
@@ -21,11 +14,9 @@
         <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
         {{/each}}
       </select>
-
       <label class="mts-label">{{localize "MONTAGE.Config.SuccessLimit"}}</label>
       <input class="mts-number" type="number" name="system.successLimit"
              value="{{item.system.successLimit}}" min="1" />
-
       <label class="mts-label">{{localize "MONTAGE.Config.FailureLimit"}}</label>
       <input class="mts-number" type="number" name="system.failureLimit"
              value="{{item.system.failureLimit}}" min="1" />
@@ -35,14 +26,13 @@
       <span class="mts-name-display">{{item.name}}</span>
     </div>
     {{/if}}
-
   </div>
 
   {{!-- ══════════════════════════════════════════════════════════ TABS ══ --}}
   <nav class="mts-tabs tabs" data-group="primary">
     <a class="mts-tab item" data-tab="basic">{{localize "MONTAGE.Sheet.Tab.Basic"}}</a>
-    <a class="mts-tab item" data-tab="complications">{{localize "MONTAGE.Sheet.Tab.Complications"}}</a>
-    {{#if isGM}}<a class="mts-tab item" data-tab="outcomes">{{localize "MONTAGE.Sheet.Tab.Outcomes"}}</a>{{/if}}
+    <a class="mts-tab item" data-tab="round1">{{localize "MONTAGE.Sheet.Tab.Round1"}}</a>
+    <a class="mts-tab item" data-tab="round2">{{localize "MONTAGE.Sheet.Tab.Round2"}}</a>
     <a class="mts-tab item" data-tab="results">{{localize "MONTAGE.Sheet.Tab.Results"}}</a>
   </nav>
 
@@ -61,90 +51,41 @@
       </div>
     </div>
 
-    {{!-- ──────────────────────────────────────── COMPLICATIONS ── --}}
-    <div class="tab mts-tab-panel" data-group="primary" data-tab="complications">
-      <div class="mts-complications-grid">
-
-        {{!-- Round 1 --}}
-        <section class="mts-comp-round">
-          <h3 class="mts-section-heading">{{localize "MONTAGE.Config.Round1Complications"}}</h3>
-          {{#if isGM}}
-          <div class="mts-comp-list">
-            {{#each complications.round1}}
-            <div class="mts-comp-entry">
-              {{editor this.textEnriched target=this.targetName button=false owner=../isOwner editable=true engine="prosemirror"}}
-              <button type="button" class="mts-icon-btn mts-danger mts-comp-delete"
-                      data-action="removeComplication" data-round="1" data-index="{{this.index}}">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-            {{/each}}
-          </div>
-          <button type="button" class="mts-add-btn" data-action="addComplication" data-round="1">
-            <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Config.AddComplication"}}
-          </button>
-          {{else}}
-          <div class="mts-comp-readonly-list">
-            {{#each complications.round1}}
-            {{#if this.textEnriched}}<div class="mts-comp-readonly-item">{{{this.textEnriched}}}</div>{{/if}}
-            {{/each}}
-          </div>
-          {{/if}}
-        </section>
-
-        {{!-- Round 2 --}}
-        <section class="mts-comp-round">
-          <h3 class="mts-section-heading">{{localize "MONTAGE.Config.Round2Complications"}}</h3>
-          {{#if isGM}}
-          <div class="mts-comp-list">
-            {{#each complications.round2}}
-            <div class="mts-comp-entry">
-              {{editor this.textEnriched target=this.targetName button=false owner=../isOwner editable=true engine="prosemirror"}}
-              <button type="button" class="mts-icon-btn mts-danger mts-comp-delete"
-                      data-action="removeComplication" data-round="2" data-index="{{this.index}}">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-            {{/each}}
-          </div>
-          <button type="button" class="mts-add-btn" data-action="addComplication" data-round="2">
-            <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Config.AddComplication"}}
-          </button>
-          {{else}}
-          <div class="mts-comp-readonly-list">
-            {{#each complications.round2}}
-            {{#if this.textEnriched}}<div class="mts-comp-readonly-item">{{{this.textEnriched}}}</div>{{/if}}
-            {{/each}}
-          </div>
-          {{/if}}
-        </section>
-
-      </div>
-    </div>
-
-    {{!-- ───────────────────────────────────────────── OUTCOMES ── --}}
-    {{#if isGM}}
-    <div class="tab mts-tab-panel" data-group="primary" data-tab="outcomes">
-      <p class="mts-hint">{{localize "MONTAGE.Sheet.OutcomesHint"}}</p>
-
+    {{!-- ──────────────────────────────────────────────── ROUND 1 ── --}}
+    <div class="tab mts-tab-panel" data-group="primary" data-tab="round1">
       <div class="mts-field">
-        <label class="mts-label mts-label-success">{{localize "MONTAGE.Outcome.TotalSuccess"}}</label>
-        {{editor outcomesEnriched.totalSuccess target="system.outcomes.totalSuccess" button=false owner=isOwner editable=true engine="prosemirror"}}
+        <label class="mts-label">{{localize "MONTAGE.Sheet.Complications"}}</label>
+        {{#if isGM}}
+        {{editor complicationsEnriched.round1 target="system.complications.round1" button=false owner=isOwner editable=true engine="prosemirror"}}
+        {{else}}
+        <div class="mts-prose-readonly">{{{complicationsEnriched.round1}}}</div>
+        {{/if}}
       </div>
+      {{#if isGM}}
       <div class="mts-field">
-        <label class="mts-label mts-label-partial">{{localize "MONTAGE.Outcome.PartialSuccess"}}</label>
-        {{editor outcomesEnriched.partialSuccess target="system.outcomes.partialSuccess" button=false owner=isOwner editable=true engine="prosemirror"}}
+        <label class="mts-label">{{localize "MONTAGE.Sheet.Outcomes"}}</label>
+        {{editor outcomesEnriched.round1 target="system.outcomes.round1" button=false owner=isOwner editable=true engine="prosemirror"}}
       </div>
-      <div class="mts-field">
-        <label class="mts-label mts-label-failure">{{localize "MONTAGE.Outcome.TotalFailure"}}</label>
-        {{editor outcomesEnriched.totalFailure target="system.outcomes.totalFailure" button=false owner=isOwner editable=true engine="prosemirror"}}
-      </div>
-
-      {{#if tally.outcomeKey}}
-      <div class="mts-outcome-banner mts-outcome-{{tally.outcomeKey}}">{{tally.outcomeLabel}}</div>
       {{/if}}
     </div>
-    {{/if}}
+
+    {{!-- ──────────────────────────────────────────────── ROUND 2 ── --}}
+    <div class="tab mts-tab-panel" data-group="primary" data-tab="round2">
+      <div class="mts-field">
+        <label class="mts-label">{{localize "MONTAGE.Sheet.Complications"}}</label>
+        {{#if isGM}}
+        {{editor complicationsEnriched.round2 target="system.complications.round2" button=false owner=isOwner editable=true engine="prosemirror"}}
+        {{else}}
+        <div class="mts-prose-readonly">{{{complicationsEnriched.round2}}}</div>
+        {{/if}}
+      </div>
+      {{#if isGM}}
+      <div class="mts-field">
+        <label class="mts-label">{{localize "MONTAGE.Sheet.Outcomes"}}</label>
+        {{editor outcomesEnriched.round2 target="system.outcomes.round2" button=false owner=isOwner editable=true engine="prosemirror"}}
+      </div>
+      {{/if}}
+    </div>
 
     {{!-- ─────────────────────────────────────────────── RESULTS ── --}}
     <div class="tab mts-tab-panel" data-group="primary" data-tab="results">

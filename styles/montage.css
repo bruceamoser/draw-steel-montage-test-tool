@@ -57,8 +57,6 @@ form.mts-form {
 .mts-name-input { flex:1; font-size:16px; font-weight:700; color:var(--mts-text)!important; background:transparent!important; border:none!important; border-bottom:1px solid var(--mts-border)!important; border-radius:0!important; padding:2px 0!important; min-width:0; }
 .mts-name-input:focus { border-bottom-color: var(--mts-accent)!important; outline:none!important; }
 .mts-name-display { flex:1; font-size:16px; font-weight:700; color:var(--mts-text); }
-.mts-push-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; background:var(--mts-accent); color:#fff!important; border:none; border-radius:var(--mts-radius); font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0; }
-.mts-push-btn:hover { background: #1976d2; }
 .mts-config-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 
 /* Form controls */
@@ -99,24 +97,6 @@ form.mts-form {
 .mts-complications-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .mts-comp-round { display:flex; flex-direction:column; gap:6px; }
 .mts-comp-list { display:flex; flex-direction:column; gap:8px; }
-
-/* Rich-text complication entries */
-.mts-comp-entry { position:relative; border:1px solid var(--mts-border); border-radius:var(--mts-radius); overflow:hidden; background:var(--mts-input-bg); }
-.mts-comp-entry .editor-container { display:flex; flex-direction:column; }
-.mts-comp-entry .editor { border:none!important; border-radius:0!important; background:transparent!important; min-height:72px; }
-.mts-comp-entry .editor-content,
-.mts-comp-entry .ProseMirror { padding:4px 36px 4px 6px!important; color:var(--mts-text)!important; min-height:52px; }
-/* Compact toolbar */
-.mts-comp-entry .editor-menu { padding:2px 28px 2px 4px!important; gap:1px!important; border-bottom:1px solid var(--mts-border)!important; background:rgba(0,0,0,0.04)!important; flex-wrap:wrap; }
-.mts-comp-entry .editor-menu button,
-.mts-comp-entry .editor-menu .control-button { width:20px!important; height:20px!important; min-width:unset!important; font-size:10px!important; padding:0!important; line-height:1!important; }
-/* Trash button float top-right */
-.mts-comp-delete { position:absolute!important; top:3px!important; right:3px!important; z-index:2; width:24px!important; height:24px!important; font-size:10px!important; }
-
-/* Player readonly complications */
-.mts-comp-readonly-list { display:flex; flex-direction:column; gap:4px; }
-.mts-comp-readonly-item { padding:4px 8px; border:1px solid var(--mts-border); border-radius:var(--mts-radius); background:rgba(0,0,0,0.03); color:var(--mts-text); font-size:12px; }
-.mts-comp-readonly-item p { margin:0; }
 
 /* Buttons */
 .mts-add-btn { display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:var(--mts-accent); color:#fff!important; border:none; border-radius:var(--mts-radius); font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; }

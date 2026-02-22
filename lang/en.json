@@ -6,9 +6,11 @@
   "MONTAGE.Item.DefaultName": "New Montage Test",
 
   "MONTAGE.Sheet.Tab.Basic": "Basic Info",
-  "MONTAGE.Sheet.Tab.Complications": "Complications",
-  "MONTAGE.Sheet.Tab.Outcomes": "Outcomes",
+  "MONTAGE.Sheet.Tab.Round1": "Round 1",
+  "MONTAGE.Sheet.Tab.Round2": "Round 2",
   "MONTAGE.Sheet.Tab.Results": "Results",
+  "MONTAGE.Sheet.Complications": "Complications",
+  "MONTAGE.Sheet.Outcomes": "GM Outcomes",
   "MONTAGE.Sheet.Description": "Description",
   "MONTAGE.Sheet.OutcomesHint": "GM-only: describe what happens for each rules outcome.",
   "MONTAGE.Sheet.Participants": "Participants",
@@ -17,8 +19,6 @@
   "MONTAGE.Sheet.Hero": "Hero",
   "MONTAGE.Sheet.HeroName": "Name",
   "MONTAGE.Sheet.NoParticipants": "No participants yet.",
-  "MONTAGE.Sheet.OpenForPlayers": "Open for Players",
-  "MONTAGE.Sheet.PushedToPlayers": "Montage Test sheet opened for all players.",
   "MONTAGE.Sheet.ResultsNote": "Results are updated by the GM during play.",
 
   "MONTAGE.TestResult.Unset": "—",

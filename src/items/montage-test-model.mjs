@@ -100,20 +100,13 @@ export class MontageTestDataModel extends foundry.abstract.TypeDataModel {
       failureLimit: new fields.NumberField({ required: true, integer: true, min: 1, initial: 4 }),
 
       complications: new fields.SchemaField({
-        round1: new fields.ArrayField(new fields.StringField({ required: false, blank: true, initial: "" }), {
-          required: true,
-          initial: [],
-        }),
-        round2: new fields.ArrayField(new fields.StringField({ required: false, blank: true, initial: "" }), {
-          required: true,
-          initial: [],
-        }),
+        round1: new fields.HTMLField({ required: false, blank: true, initial: "" }),
+        round2: new fields.HTMLField({ required: false, blank: true, initial: "" }),
       }),
 
       outcomes: new fields.SchemaField({
-        totalSuccess: new fields.HTMLField({ required: false, blank: true, initial: "" }),
-        partialSuccess: new fields.HTMLField({ required: false, blank: true, initial: "" }),
-        totalFailure: new fields.HTMLField({ required: false, blank: true, initial: "" }),
+        round1: new fields.HTMLField({ required: false, blank: true, initial: "" }),
+        round2: new fields.HTMLField({ required: false, blank: true, initial: "" }),
       }),
 
       participants: new fields.ArrayField(
