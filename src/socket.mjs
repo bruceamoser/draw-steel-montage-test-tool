@@ -73,7 +73,7 @@ function broadcastState(testData) {
  * Initialize the socket handler. Called during module ready hook.
  */
 export function initSocket() {
-  game.socket.on(SOCKET_NAME, (payload) => {
+  game.socket.on(SOCKET_NAME, async (payload) => {
     const { event, data } = payload;
 
     switch (event) {

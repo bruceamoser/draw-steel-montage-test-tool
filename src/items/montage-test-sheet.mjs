@@ -69,6 +69,14 @@ export class MontageTestSheet extends ItemSheetV1 {
       partialSuccess: await TE.enrichHTML(system.outcomes?.partialSuccess ?? "", enrichOpts),
       totalFailure: await TE.enrichHTML(system.outcomes?.totalFailure ?? "", enrichOpts),
     };
+    // Strip any residual HTML tags from complication strings (left over from ProseMirror era)
+    const stripHTML = (raw) => {
+      if (!raw) return "";
+      const d = document.createElement("div");
+      d.innerHTML = raw;
+      return d.textContent ?? "";
+    };
+
     return {
       ...data,
       isGM: game.user.isGM,
@@ -82,8 +90,8 @@ export class MontageTestSheet extends ItemSheetV1 {
       descriptionEnriched,
       outcomesEnriched,
       complications: {
-        round1: (system.complications?.round1 ?? []).map((text, index) => ({ index, text })),
-        round2: (system.complications?.round2 ?? []).map((text, index) => ({ index, text })),
+        round1: (system.complications?.round1 ?? []).map((text, index) => ({ index, text: stripHTML(text) })),
+        round2: (system.complications?.round2 ?? []).map((text, index) => ({ index, text: stripHTML(text) })),
       },
       participants: participants.map((p, index) => ({
         index,
