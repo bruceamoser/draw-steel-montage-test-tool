@@ -146,6 +146,7 @@ export const SOCKET_EVENTS = {
   MONTAGE_PAUSED: "montagePaused",
   MONTAGE_RESUMED: "montageResumed",
   MONTAGE_ABANDONED: "montageAbandoned",
+  OPEN_ITEM_SHEET: "openItemSheet",
 };
 
 /**

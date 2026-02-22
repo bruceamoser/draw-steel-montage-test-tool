@@ -1,6 +1,5 @@
 <form class="montage-test-sheet" autocomplete="off">
   <header class="sheet-header flexrow">
-    <img class="profile" src="{{item.img}}" data-edit="img" height="64" width="64" />
     <div class="header-fields">
       <h1 class="charname">
         <input name="name" type="text" value="{{item.name}}" placeholder="{{localize 'MONTAGE.Item.MontageTest'}}" />
@@ -20,6 +19,10 @@
 
         <label>{{localize "MONTAGE.Config.FailureLimit"}}</label>
         <input type="number" name="system.failureLimit" value="{{item.system.failureLimit}}" min="1" />
+
+        <button type="button" class="montage-btn-primary montage-push-btn" data-action="openForPlayers">
+          <i class="fa-solid fa-share-from-square"></i> {{localize "MONTAGE.Sheet.OpenForPlayers"}}
+        </button>
       </div>
       {{/if}}
     </div>
@@ -28,10 +31,8 @@
   <nav class="sheet-tabs tabs" data-group="primary">
     <a class="item" data-tab="basic">{{localize "MONTAGE.Sheet.Tab.Basic"}}</a>
     <a class="item" data-tab="complications">{{localize "MONTAGE.Sheet.Tab.Complications"}}</a>
-    {{#if isGM}}
-    <a class="item" data-tab="outcomes">{{localize "MONTAGE.Sheet.Tab.Outcomes"}}</a>
+    {{#if isGM}}<a class="item" data-tab="outcomes">{{localize "MONTAGE.Sheet.Tab.Outcomes"}}</a>{{/if}}
     <a class="item" data-tab="results">{{localize "MONTAGE.Sheet.Tab.Results"}}</a>
-    {{/if}}
   </nav>
 
   <section class="tab-content">
@@ -40,11 +41,7 @@
     <div class="tab" data-group="primary" data-tab="basic">
       <div class="form-group stacked">
         <label>{{localize "MONTAGE.Sheet.Description"}}</label>
-        {{#if isGM}}
-        <textarea name="system.description" rows="8">{{item.system.description}}</textarea>
-        {{else}}
-        <div class="montage-readonly-block">{{{item.system.description}}}</div>
-        {{/if}}
+        {{editor content=descriptionEnriched target="system.description" button=false owner=isOwner editable=isGM}}
       </div>
     </div>
 
@@ -54,11 +51,11 @@
         <section class="montage-complications-round">
           <h3>{{localize "MONTAGE.Config.Round1Complications"}}</h3>
           {{#if isGM}}
-          <div class="montage-list">
+          <div class="montage-complication-list">
             {{#each complications.round1}}
-            <div class="montage-list-row">
-              <input type="text" name="system.complications.round1.{{this.index}}" value="{{this.text}}" />
-              <button type="button" data-action="removeComplication" data-round="1" data-index="{{this.index}}">
+            <div class="montage-complication-entry">
+              {{editor content=textEnriched target=targetName button=false owner=../isOwner editable=true}}
+              <button type="button" class="montage-btn-danger" data-action="removeComplication" data-round="1" data-index="{{this.index}}">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
@@ -70,7 +67,7 @@
           {{else}}
           <ul class="montage-readonly-list">
             {{#each complications.round1}}
-            {{#if this.text}}<li>{{this.text}}</li>{{/if}}
+            {{#if this.text}}<li>{{{this.text}}}</li>{{/if}}
             {{/each}}
           </ul>
           {{/if}}
@@ -79,11 +76,11 @@
         <section class="montage-complications-round">
           <h3>{{localize "MONTAGE.Config.Round2Complications"}}</h3>
           {{#if isGM}}
-          <div class="montage-list">
+          <div class="montage-complication-list">
             {{#each complications.round2}}
-            <div class="montage-list-row">
-              <input type="text" name="system.complications.round2.{{this.index}}" value="{{this.text}}" />
-              <button type="button" data-action="removeComplication" data-round="2" data-index="{{this.index}}">
+            <div class="montage-complication-entry">
+              {{editor content=textEnriched target=targetName button=false owner=../isOwner editable=true}}
+              <button type="button" class="montage-btn-danger" data-action="removeComplication" data-round="2" data-index="{{this.index}}">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
@@ -95,7 +92,7 @@
           {{else}}
           <ul class="montage-readonly-list">
             {{#each complications.round2}}
-            {{#if this.text}}<li>{{this.text}}</li>{{/if}}
+            {{#if this.text}}<li>{{{this.text}}}</li>{{/if}}
             {{/each}}
           </ul>
           {{/if}}
@@ -110,17 +107,17 @@
 
       <div class="form-group stacked">
         <label>{{localize "MONTAGE.Outcome.TotalSuccess"}}</label>
-        <textarea name="system.outcomes.totalSuccess" rows="5">{{item.system.outcomes.totalSuccess}}</textarea>
+        {{editor content=outcomesEnriched.totalSuccess target="system.outcomes.totalSuccess" button=false owner=isOwner editable=true}}
       </div>
 
       <div class="form-group stacked">
         <label>{{localize "MONTAGE.Outcome.PartialSuccess"}}</label>
-        <textarea name="system.outcomes.partialSuccess" rows="5">{{item.system.outcomes.partialSuccess}}</textarea>
+        {{editor content=outcomesEnriched.partialSuccess target="system.outcomes.partialSuccess" button=false owner=isOwner editable=true}}
       </div>
 
       <div class="form-group stacked">
         <label>{{localize "MONTAGE.Outcome.TotalFailure"}}</label>
-        <textarea name="system.outcomes.totalFailure" rows="5">{{item.system.outcomes.totalFailure}}</textarea>
+        {{editor content=outcomesEnriched.totalFailure target="system.outcomes.totalFailure" button=false owner=isOwner editable=true}}
       </div>
 
       {{#if tally.outcomeKey}}
@@ -130,8 +127,9 @@
       </div>
       {{/if}}
     </div>
+    {{/if}}
 
-    {{!-- RESULTS (GM only) --}}
+    {{!-- RESULTS (all users; players see read-only view) --}}
     <div class="tab" data-group="primary" data-tab="results">
       <div class="montage-results-header">
         <div class="montage-results-tally">
@@ -149,14 +147,18 @@
       </div>
 
       <section class="montage-participants">
+        {{#if isGM}}
         <header class="flexrow montage-participants-header">
           <h3>{{localize "MONTAGE.Sheet.Participants"}}</h3>
           <button type="button" data-action="addParticipant" class="montage-btn-primary">
             <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Sheet.AddParticipant"}}
           </button>
         </header>
-
         <div class="notes montage-participants-drop">{{localize "MONTAGE.Sheet.DropActor"}}</div>
+        {{else}}
+        <h3>{{localize "MONTAGE.Sheet.Participants"}}</h3>
+        <p class="notes">{{localize "MONTAGE.Sheet.ResultsNote"}}</p>
+        {{/if}}
 
         {{#if participants.length}}
         <table class="montage-results-table">
@@ -165,7 +167,7 @@
               <th>{{localize "MONTAGE.Sheet.Hero"}}</th>
               <th>{{localize "MONTAGE.Tracker.Round"}} 1</th>
               <th>{{localize "MONTAGE.Tracker.Round"}} 2</th>
-              <th></th>
+              {{#if isGM}}<th></th>{{/if}}
             </tr>
           </thead>
           <tbody>
@@ -173,32 +175,46 @@
             <tr>
               <td class="montage-hero-cell">
                 <img src="{{this.img}}" class="montage-hero-thumb" />
+                {{#if ../isGM}}
                 <input type="hidden" name="system.participants.{{this.index}}.actorUuid" value="{{this.actorUuid}}" />
                 <input type="text" name="system.participants.{{this.index}}.name" value="{{this.name}}" placeholder="{{localize 'MONTAGE.Sheet.HeroName'}}" />
                 <input type="hidden" name="system.participants.{{this.index}}.img" value="{{this.img}}" />
+                {{else}}
+                <span>{{this.name}}</span>
+                {{/if}}
               </td>
 
               <td>
+                {{#if ../isGM}}
                 <select name="system.participants.{{this.index}}.round1">
-                  {{#each ../resultChoices}}
+                  {{#each ../../resultChoices}}
                   <option value="{{this.value}}" {{#if (eq this.value ../this.round1)}}selected{{/if}}>{{this.label}}</option>
                   {{/each}}
                 </select>
+                {{else}}
+                <span class="montage-result-badge montage-result-{{this.round1}}">{{this.round1}}</span>
+                {{/if}}
               </td>
 
               <td>
+                {{#if ../isGM}}
                 <select name="system.participants.{{this.index}}.round2">
-                  {{#each ../resultChoices}}
+                  {{#each ../../resultChoices}}
                   <option value="{{this.value}}" {{#if (eq this.value ../this.round2)}}selected{{/if}}>{{this.label}}</option>
                   {{/each}}
                 </select>
+                {{else}}
+                <span class="montage-result-badge montage-result-{{this.round2}}">{{this.round2}}</span>
+                {{/if}}
               </td>
 
+              {{#if ../isGM}}
               <td class="montage-row-actions">
                 <button type="button" data-action="removeParticipant" data-index="{{this.index}}" class="montage-btn-danger">
                   <i class="fa-solid fa-trash"></i>
                 </button>
               </td>
+              {{/if}}
             </tr>
             {{/each}}
           </tbody>
@@ -208,7 +224,6 @@
         {{/if}}
       </section>
     </div>
-    {{/if}}
 
   </section>
 </form>

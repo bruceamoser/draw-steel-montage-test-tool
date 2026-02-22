@@ -17,6 +17,9 @@
   "MONTAGE.Sheet.Hero": "Hero",
   "MONTAGE.Sheet.HeroName": "Name",
   "MONTAGE.Sheet.NoParticipants": "No participants yet.",
+  "MONTAGE.Sheet.OpenForPlayers": "Open for Players",
+  "MONTAGE.Sheet.PushedToPlayers": "Montage Test sheet opened for all players.",
+  "MONTAGE.Sheet.ResultsNote": "Results are updated by the GM during play.",
 
   "MONTAGE.TestResult.Unset": "—",
   "MONTAGE.TestResult.Success": "Success",

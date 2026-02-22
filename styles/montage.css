@@ -156,10 +156,82 @@ form.montage-test-sheet .montage-list-row button[data-action="removeComplication
   flex-shrink: 0;
 }
 
+/* Complication rich-text editor entries */
+form.montage-test-sheet .montage-complication-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+form.montage-test-sheet .montage-complication-entry {
+  display: grid;
+  grid-template-columns: 1fr 34px;
+  gap: 4px;
+  align-items: start;
+}
+
+form.montage-test-sheet .montage-complication-entry .editor {
+  min-height: 60px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--montage-border);
+  border-radius: var(--montage-radius);
+}
+
+form.montage-test-sheet .montage-complication-entry .editor-content {
+  padding: 4px 6px;
+  color: var(--montage-text);
+  min-height: 52px;
+}
+
+form.montage-test-sheet .montage-complication-entry button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(180, 50, 50, 0.4);
+  border-radius: 4px;
+  background: rgba(180, 50, 50, 0.08);
+  color: #a33;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 .montage-test-sheet .sheet-header {
   gap: 12px;
   align-items: center;
   margin-bottom: 8px;
+}
+
+/* Push-to-players button in the header basic row */
+.montage-test-sheet .montage-push-btn {
+  grid-column: span 1;
+  white-space: nowrap;
+}
+
+/* Result badge for read-only participant table */
+.montage-result-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--montage-text);
+  text-transform: capitalize;
+}
+
+.montage-result-badge.montage-result-success {
+  background: rgba(40, 140, 50, 0.15);
+  color: #1a6628;
+}
+
+.montage-result-badge.montage-result-fail {
+  background: rgba(180, 40, 40, 0.15);
+  color: #a33;
 }
 
 .montage-test-sheet .sheet-header .profile {
@@ -170,7 +242,7 @@ form.montage-test-sheet .montage-list-row button[data-action="removeComplication
 
 .montage-test-sheet .montage-basic-row {
   display: grid;
-  grid-template-columns: 140px 1fr 160px 90px 160px 90px;
+  grid-template-columns: 140px 1fr 160px 90px 160px 90px auto;
   gap: 6px;
   align-items: center;
 }
@@ -407,8 +479,7 @@ form.montage-test-sheet .montage-list-row button[data-action="removeComplication
 
 /* --------------------------------------------------------------------------
    Outcome Display
-   -------------------------------------------------------------------------- */
-.montage-outcome {
+   -------------------------------------------------------------------------- */\n\n/* ProseMirror editor inside the montage test sheet */\nform.montage-test-sheet .editor {\n  background: rgba(255, 255, 255, 0.55);\n  border: 1px solid var(--montage-border);\n  border-radius: var(--montage-radius);\n  min-height: 100px;\n}\n\nform.montage-test-sheet .editor-content {\n  padding: 6px 8px;\n  color: var(--montage-text);\n  min-height: 92px;\n}\n\nform.montage-test-sheet .editor-container {\n  display: flex;\n  flex-direction: column;\n}\n\n.montage-outcome {
   text-align: center;
   padding: 12px;
   margin: 8px 0;

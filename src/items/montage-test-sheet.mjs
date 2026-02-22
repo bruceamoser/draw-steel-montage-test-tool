@@ -2,7 +2,7 @@
  * Montage Test Item Sheet
  */
 
-import { MODULE_ID, MONTAGE_DIFFICULTY, DIFFICULTY_TABLE_BASE, BASE_HERO_COUNT, MIN_LIMIT } from "../config.mjs";
+import { MODULE_ID, MONTAGE_DIFFICULTY, DIFFICULTY_TABLE_BASE, BASE_HERO_COUNT, MIN_LIMIT, SOCKET_NAME, SOCKET_EVENTS } from "../config.mjs";
 import {
   MONTAGE_TEST_ITEM_TYPE,
   MONTAGE_TEST_OUTCOME,
@@ -34,7 +34,7 @@ export class MontageTestSheet extends ItemSheetV1 {
   }
 
   /** @override */
-  getData(options = {}) {
+  async getData(options = {}) {
     const data = super.getData(options);
 
     const system = this.item.system;
@@ -60,6 +60,19 @@ export class MontageTestSheet extends ItemSheetV1 {
       ? `MONTAGE.Outcome.${outcomeKey.charAt(0).toUpperCase() + outcomeKey.slice(1)}`
       : null;
 
+    // Enrich rich-text fields for ProseMirror display
+    const enrichOpts = { relativeTo: this.item };
+    const descriptionEnriched = await TextEditor.enrichHTML(system.description ?? "", enrichOpts);
+    const outcomesEnriched = {
+      totalSuccess: await TextEditor.enrichHTML(system.outcomes?.totalSuccess ?? "", enrichOpts),
+      partialSuccess: await TextEditor.enrichHTML(system.outcomes?.partialSuccess ?? "", enrichOpts),
+      totalFailure: await TextEditor.enrichHTML(system.outcomes?.totalFailure ?? "", enrichOpts),
+    };
+    const round1Raw = system.complications?.round1 ?? [];
+    const round2Raw = system.complications?.round2 ?? [];
+    const round1Enriched = await Promise.all(round1Raw.map((t) => TextEditor.enrichHTML(t ?? "", enrichOpts)));
+    const round2Enriched = await Promise.all(round2Raw.map((t) => TextEditor.enrichHTML(t ?? "", enrichOpts)));
+
     return {
       ...data,
       isGM: game.user.isGM,
@@ -70,9 +83,21 @@ export class MontageTestSheet extends ItemSheetV1 {
         label: game.i18n.localize(`MONTAGE.Difficulty.${key.charAt(0) + key.slice(1).toLowerCase()}`),
         selected: value === system.difficulty,
       })),
+      descriptionEnriched,
+      outcomesEnriched,
       complications: {
-        round1: (system.complications?.round1 ?? []).map((text, index) => ({ index, text })),
-        round2: (system.complications?.round2 ?? []).map((text, index) => ({ index, text })),
+        round1: round1Raw.map((text, index) => ({
+          index,
+          text,
+          textEnriched: round1Enriched[index],
+          targetName: `system.complications.round1.${index}`,
+        })),
+        round2: round2Raw.map((text, index) => ({
+          index,
+          text,
+          textEnriched: round2Enriched[index],
+          targetName: `system.complications.round2.${index}`,
+        })),
       },
       participants: participants.map((p, index) => ({
         index,
@@ -139,6 +164,9 @@ export class MontageTestSheet extends ItemSheetV1 {
       case "removeParticipant":
         return this.#removeParticipant(Number(event.currentTarget.dataset.index));
 
+      case "openForPlayers":
+        return this.#openForPlayers();
+
       default:
         return;
     }
@@ -192,6 +220,17 @@ export class MontageTestSheet extends ItemSheetV1 {
     });
     await this.item.update({ "system.participants": participants });
     await this.#recalcLimits();
+
+    // Auto-grant OBSERVER permission on this item to all non-GM users
+    const newOwnership = {};
+    for (const user of game.users.filter((u) => !u.isGM)) {
+      if ((this.item.ownership[user.id] ?? CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE) < CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER) {
+        newOwnership[user.id] = CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
+      }
+    }
+    if (Object.keys(newOwnership).length) {
+      await this.item.update({ ownership: { ...this.item.ownership, ...newOwnership } });
+    }
   }
 
   async #removeParticipant(index) {
@@ -200,6 +239,17 @@ export class MontageTestSheet extends ItemSheetV1 {
     participants.splice(index, 1);
     await this.item.update({ "system.participants": participants });
     await this.#recalcLimits();
+  }
+
+  /**
+   * Emit a socket event that instructs all connected players to open this item's sheet.
+   */
+  async #openForPlayers() {
+    game.socket.emit(SOCKET_NAME, {
+      event: SOCKET_EVENTS.OPEN_ITEM_SHEET,
+      data: { itemId: this.item.id },
+    });
+    ui.notifications.info(game.i18n.localize("MONTAGE.Sheet.PushedToPlayers"));
   }
 
   async #onDropActor(event) {
