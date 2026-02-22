@@ -71,11 +71,9 @@
           {{#if isGM}}
           <div class="mts-comp-list">
             {{#each complications.round1}}
-            <div class="mts-comp-row">
-              <input class="mts-text-input" type="text"
-                     name="system.complications.round1.{{this.index}}"
-                     value="{{this.text}}" />
-              <button type="button" class="mts-icon-btn mts-danger"
+            <div class="mts-comp-entry">
+              {{editor this.textEnriched target=this.targetName button=false owner=../isOwner editable=true engine="prosemirror"}}
+              <button type="button" class="mts-icon-btn mts-danger mts-comp-delete"
                       data-action="removeComplication" data-round="1" data-index="{{this.index}}">
                 <i class="fa-solid fa-trash"></i>
               </button>
@@ -86,11 +84,11 @@
             <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Config.AddComplication"}}
           </button>
           {{else}}
-          <ul class="mts-comp-readonly">
+          <div class="mts-comp-readonly-list">
             {{#each complications.round1}}
-            {{#if this.text}}<li>{{this.text}}</li>{{/if}}
+            {{#if this.textEnriched}}<div class="mts-comp-readonly-item">{{{this.textEnriched}}}</div>{{/if}}
             {{/each}}
-          </ul>
+          </div>
           {{/if}}
         </section>
 
@@ -100,11 +98,9 @@
           {{#if isGM}}
           <div class="mts-comp-list">
             {{#each complications.round2}}
-            <div class="mts-comp-row">
-              <input class="mts-text-input" type="text"
-                     name="system.complications.round2.{{this.index}}"
-                     value="{{this.text}}" />
-              <button type="button" class="mts-icon-btn mts-danger"
+            <div class="mts-comp-entry">
+              {{editor this.textEnriched target=this.targetName button=false owner=../isOwner editable=true engine="prosemirror"}}
+              <button type="button" class="mts-icon-btn mts-danger mts-comp-delete"
                       data-action="removeComplication" data-round="2" data-index="{{this.index}}">
                 <i class="fa-solid fa-trash"></i>
               </button>
@@ -115,11 +111,11 @@
             <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Config.AddComplication"}}
           </button>
           {{else}}
-          <ul class="mts-comp-readonly">
+          <div class="mts-comp-readonly-list">
             {{#each complications.round2}}
-            {{#if this.text}}<li>{{this.text}}</li>{{/if}}
+            {{#if this.textEnriched}}<div class="mts-comp-readonly-item">{{{this.textEnriched}}}</div>{{/if}}
             {{/each}}
-          </ul>
+          </div>
           {{/if}}
         </section>
 

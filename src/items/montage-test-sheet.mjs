@@ -69,13 +69,10 @@ export class MontageTestSheet extends ItemSheetV1 {
       partialSuccess: await TE.enrichHTML(system.outcomes?.partialSuccess ?? "", enrichOpts),
       totalFailure: await TE.enrichHTML(system.outcomes?.totalFailure ?? "", enrichOpts),
     };
-    // Strip any residual HTML tags from complication strings (left over from ProseMirror era)
-    const stripHTML = (raw) => {
-      if (!raw) return "";
-      const d = document.createElement("div");
-      d.innerHTML = raw;
-      return d.textContent ?? "";
-    };
+    const round1Raw = system.complications?.round1 ?? [];
+    const round2Raw = system.complications?.round2 ?? [];
+    const round1Enriched = await Promise.all(round1Raw.map((t) => TE.enrichHTML(t ?? "", enrichOpts)));
+    const round2Enriched = await Promise.all(round2Raw.map((t) => TE.enrichHTML(t ?? "", enrichOpts)));
 
     return {
       ...data,
@@ -90,8 +87,18 @@ export class MontageTestSheet extends ItemSheetV1 {
       descriptionEnriched,
       outcomesEnriched,
       complications: {
-        round1: (system.complications?.round1 ?? []).map((text, index) => ({ index, text: stripHTML(text) })),
-        round2: (system.complications?.round2 ?? []).map((text, index) => ({ index, text: stripHTML(text) })),
+        round1: round1Raw.map((text, index) => ({
+          index,
+          text,
+          textEnriched: round1Enriched[index],
+          targetName: `system.complications.round1.${index}`,
+        })),
+        round2: round2Raw.map((text, index) => ({
+          index,
+          text,
+          textEnriched: round2Enriched[index],
+          targetName: `system.complications.round2.${index}`,
+        })),
       },
       participants: participants.map((p, index) => ({
         index,
