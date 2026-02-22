@@ -27,8 +27,56 @@
 }
 
 /* --------------------------------------------------------------------------
-   Montage Test Item Sheet (v0.3.0)
+   Montage Test Item Sheet
+   The item sheet renders inside Draw Steel's parchment-background window, so
+   all text must use dark colours (not the near-white used on the dark tracker apps).
    -------------------------------------------------------------------------- */
+
+/* Scope dark-on-light overrides to the form element which carries the class. */
+form.montage-test-sheet {
+  --montage-text:     #2c1810;   /* dark brown — readable on parchment */
+  --montage-text-dim: #5c4033;
+  --montage-border:   #8b6452;
+  --montage-subtext:  #4a3728;
+  color: var(--montage-text);
+}
+
+/* Re-target the window-content colour for item-sheet windows. The app element
+   also carries .montage-test-sheet so this specificity beats the shared rule. */
+.montage-test-sheet.sheet .window-content {
+  color: var(--montage-text);
+}
+
+form.montage-test-sheet label,
+form.montage-test-sheet h1,
+form.montage-test-sheet h2,
+form.montage-test-sheet h3,
+form.montage-test-sheet .sheet-tabs a.item,
+form.montage-test-sheet .tabs a {
+  color: var(--montage-text);
+}
+
+form.montage-test-sheet input[type="text"],
+form.montage-test-sheet input[type="number"],
+form.montage-test-sheet textarea,
+form.montage-test-sheet select {
+  color: var(--montage-text);
+  background: rgba(255, 255, 255, 0.55);
+  border-color: var(--montage-border);
+}
+
+form.montage-test-sheet .montage-readonly-block {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--montage-text);
+}
+
+form.montage-test-sheet .montage-results-table th,
+form.montage-test-sheet .montage-results-table td {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+  color: var(--montage-text);
+}
+
 .montage-test-sheet .sheet-header {
   gap: 12px;
   align-items: center;
@@ -49,7 +97,7 @@
 }
 
 .montage-test-sheet .sheet-tabs {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
   margin-bottom: 8px;
 }
 
@@ -59,9 +107,9 @@
 
 .montage-readonly-block {
   padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: var(--montage-radius);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 0, 0, 0.04);
   min-height: 80px;
 }
 
@@ -99,7 +147,7 @@
 
 .montage-participants-drop {
   padding: 6px 8px;
-  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border: 1px dashed rgba(0, 0, 0, 0.25);
   border-radius: var(--montage-radius);
   margin: 6px 0 10px;
 }
@@ -111,7 +159,7 @@
 
 .montage-results-table th,
 .montage-results-table td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   padding: 6px;
   vertical-align: middle;
 }
