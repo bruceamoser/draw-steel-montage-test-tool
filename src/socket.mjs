@@ -132,7 +132,8 @@ export function initSocket() {
       case SOCKET_EVENTS.OPEN_ITEM_SHEET:
         // Players open the item sheet when pushed by the GM
         if (!game.user.isGM) {
-          const item = game.items.get(data.itemId);
+          const item = game.items.get(data.itemId)
+            ?? await fromUuid(`Item.${data.itemId}`);
           if (item) item.sheet?.render(true);
         }
         break;

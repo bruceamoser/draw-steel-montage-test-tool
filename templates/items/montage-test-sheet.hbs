@@ -1,231 +1,249 @@
-<form class="montage-test-sheet" autocomplete="off">
-  <header class="sheet-header flexrow">
-    <div class="header-fields">
-      {{#if isGM}}
-      <div class="montage-header-title">
-        <h1 class="charname">
-          <input name="name" type="text" value="{{item.name}}" placeholder="{{localize 'MONTAGE.Item.MontageTest'}}" />
-        </h1>
-        <button type="button" class="montage-btn-primary montage-push-btn" data-action="openForPlayers">
-          <i class="fa-solid fa-share-from-square"></i> {{localize "MONTAGE.Sheet.OpenForPlayers"}}
-        </button>
-      </div>
-      <div class="montage-basic-row">
-        <label>{{localize "MONTAGE.Config.Difficulty"}}</label>
-        <select name="system.difficulty">
-          {{#each difficulties}}
-          <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
-          {{/each}}
-        </select>
+<form class="montage-test-sheet mts-form" autocomplete="off">
 
-        <label>{{localize "MONTAGE.Config.SuccessLimit"}}</label>
-        <input type="number" name="system.successLimit" value="{{item.system.successLimit}}" min="1" />
+  {{!-- ═══════════════════════════════════════════════════════ HEADER ══ --}}
+  <div class="mts-header">
 
-        <label>{{localize "MONTAGE.Config.FailureLimit"}}</label>
-        <input type="number" name="system.failureLimit" value="{{item.system.failureLimit}}" min="1" />
-      </div>
-      {{else}}
-      <h1 class="charname">{{item.name}}</h1>
-      {{/if}}
+    {{!-- Title row: name + push button --}}
+    {{#if isGM}}
+    <div class="mts-title-row">
+      <input class="mts-name-input" name="name" type="text" value="{{item.name}}"
+             placeholder="{{localize 'MONTAGE.Item.MontageTest'}}" />
+      <button type="button" class="mts-push-btn" data-action="openForPlayers">
+        <i class="fa-solid fa-share-from-square"></i> {{localize "MONTAGE.Sheet.OpenForPlayers"}}
+      </button>
     </div>
-  </header>
 
-  <nav class="sheet-tabs tabs" data-group="primary">
-    <a class="item" data-tab="basic">{{localize "MONTAGE.Sheet.Tab.Basic"}}</a>
-    <a class="item" data-tab="complications">{{localize "MONTAGE.Sheet.Tab.Complications"}}</a>
-    {{#if isGM}}<a class="item" data-tab="outcomes">{{localize "MONTAGE.Sheet.Tab.Outcomes"}}</a>{{/if}}
-    <a class="item" data-tab="results">{{localize "MONTAGE.Sheet.Tab.Results"}}</a>
+    {{!-- Config row: difficulty + limits --}}
+    <div class="mts-config-row">
+      <label class="mts-label">{{localize "MONTAGE.Config.Difficulty"}}</label>
+      <select class="mts-select" name="system.difficulty">
+        {{#each difficulties}}
+        <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+        {{/each}}
+      </select>
+
+      <label class="mts-label">{{localize "MONTAGE.Config.SuccessLimit"}}</label>
+      <input class="mts-number" type="number" name="system.successLimit"
+             value="{{item.system.successLimit}}" min="1" />
+
+      <label class="mts-label">{{localize "MONTAGE.Config.FailureLimit"}}</label>
+      <input class="mts-number" type="number" name="system.failureLimit"
+             value="{{item.system.failureLimit}}" min="1" />
+    </div>
+    {{else}}
+    <div class="mts-title-row">
+      <span class="mts-name-display">{{item.name}}</span>
+    </div>
+    {{/if}}
+
+  </div>
+
+  {{!-- ══════════════════════════════════════════════════════════ TABS ══ --}}
+  <nav class="mts-tabs tabs" data-group="primary">
+    <a class="mts-tab item" data-tab="basic">{{localize "MONTAGE.Sheet.Tab.Basic"}}</a>
+    <a class="mts-tab item" data-tab="complications">{{localize "MONTAGE.Sheet.Tab.Complications"}}</a>
+    {{#if isGM}}<a class="mts-tab item" data-tab="outcomes">{{localize "MONTAGE.Sheet.Tab.Outcomes"}}</a>{{/if}}
+    <a class="mts-tab item" data-tab="results">{{localize "MONTAGE.Sheet.Tab.Results"}}</a>
   </nav>
 
-  <section class="tab-content">
+  {{!-- ═══════════════════════════════════════════════ TAB CONTENT ══ --}}
+  <div class="mts-tab-body tab-content">
 
-    {{!-- BASIC --}}
-    <div class="tab" data-group="primary" data-tab="basic">
-      <div class="form-group stacked">
-        <label>{{localize "MONTAGE.Sheet.Description"}}</label>
-        {{editor descriptionEnriched target="system.description" button=false owner=isOwner editable=isGM engine="prosemirror"}}
+    {{!-- ─────────────────────────────────────────── BASIC INFO ── --}}
+    <div class="tab mts-tab-panel" data-group="primary" data-tab="basic">
+      <div class="mts-field">
+        <label class="mts-label">{{localize "MONTAGE.Sheet.Description"}}</label>
+        {{#if isGM}}
+        {{editor descriptionEnriched target="system.description" button=false owner=isOwner editable=true engine="prosemirror"}}
+        {{else}}
+        <div class="mts-prose-readonly">{{{descriptionEnriched}}}</div>
+        {{/if}}
       </div>
     </div>
 
-    {{!-- COMPLICATIONS --}}
-    <div class="tab" data-group="primary" data-tab="complications">
-      <div class="montage-complications">
-        <section class="montage-complications-round">
-          <h3>{{localize "MONTAGE.Config.Round1Complications"}}</h3>
+    {{!-- ──────────────────────────────────────── COMPLICATIONS ── --}}
+    <div class="tab mts-tab-panel" data-group="primary" data-tab="complications">
+      <div class="mts-complications-grid">
+
+        {{!-- Round 1 --}}
+        <section class="mts-comp-round">
+          <h3 class="mts-section-heading">{{localize "MONTAGE.Config.Round1Complications"}}</h3>
           {{#if isGM}}
-          <div class="montage-complication-list">
+          <div class="mts-comp-list">
             {{#each complications.round1}}
-            <div class="montage-complication-entry">
-              {{editor textEnriched target=targetName button=false owner=../isOwner editable=true engine="prosemirror"}}
-              <button type="button" class="montage-btn-danger" data-action="removeComplication" data-round="1" data-index="{{this.index}}">
+            <div class="mts-comp-row">
+              <input class="mts-text-input" type="text"
+                     name="system.complications.round1.{{this.index}}"
+                     value="{{this.text}}" />
+              <button type="button" class="mts-icon-btn mts-danger"
+                      data-action="removeComplication" data-round="1" data-index="{{this.index}}">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
             {{/each}}
           </div>
-          <button type="button" class="montage-btn-primary" data-action="addComplication" data-round="1">
+          <button type="button" class="mts-add-btn" data-action="addComplication" data-round="1">
             <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Config.AddComplication"}}
           </button>
           {{else}}
-          <ul class="montage-readonly-list">
+          <ul class="mts-comp-readonly">
             {{#each complications.round1}}
-            {{#if this.text}}<li>{{{this.text}}}</li>{{/if}}
+            {{#if this.text}}<li>{{this.text}}</li>{{/if}}
             {{/each}}
           </ul>
           {{/if}}
         </section>
 
-        <section class="montage-complications-round">
-          <h3>{{localize "MONTAGE.Config.Round2Complications"}}</h3>
+        {{!-- Round 2 --}}
+        <section class="mts-comp-round">
+          <h3 class="mts-section-heading">{{localize "MONTAGE.Config.Round2Complications"}}</h3>
           {{#if isGM}}
-          <div class="montage-complication-list">
+          <div class="mts-comp-list">
             {{#each complications.round2}}
-            <div class="montage-complication-entry">
-              {{editor textEnriched target=targetName button=false owner=../isOwner editable=true engine="prosemirror"}}
-              <button type="button" class="montage-btn-danger" data-action="removeComplication" data-round="2" data-index="{{this.index}}">
+            <div class="mts-comp-row">
+              <input class="mts-text-input" type="text"
+                     name="system.complications.round2.{{this.index}}"
+                     value="{{this.text}}" />
+              <button type="button" class="mts-icon-btn mts-danger"
+                      data-action="removeComplication" data-round="2" data-index="{{this.index}}">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
             {{/each}}
           </div>
-          <button type="button" class="montage-btn-primary" data-action="addComplication" data-round="2">
+          <button type="button" class="mts-add-btn" data-action="addComplication" data-round="2">
             <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Config.AddComplication"}}
           </button>
           {{else}}
-          <ul class="montage-readonly-list">
+          <ul class="mts-comp-readonly">
             {{#each complications.round2}}
-            {{#if this.text}}<li>{{{this.text}}}</li>{{/if}}
+            {{#if this.text}}<li>{{this.text}}</li>{{/if}}
             {{/each}}
           </ul>
           {{/if}}
         </section>
+
       </div>
     </div>
 
-    {{!-- OUTCOMES (GM only) --}}
+    {{!-- ───────────────────────────────────────────── OUTCOMES ── --}}
     {{#if isGM}}
-    <div class="tab" data-group="primary" data-tab="outcomes">
-      <p class="notes">{{localize "MONTAGE.Sheet.OutcomesHint"}}</p>
+    <div class="tab mts-tab-panel" data-group="primary" data-tab="outcomes">
+      <p class="mts-hint">{{localize "MONTAGE.Sheet.OutcomesHint"}}</p>
 
-      <div class="form-group stacked">
-        <label>{{localize "MONTAGE.Outcome.TotalSuccess"}}</label>
+      <div class="mts-field">
+        <label class="mts-label mts-label-success">{{localize "MONTAGE.Outcome.TotalSuccess"}}</label>
         {{editor outcomesEnriched.totalSuccess target="system.outcomes.totalSuccess" button=false owner=isOwner editable=true engine="prosemirror"}}
       </div>
-
-      <div class="form-group stacked">
-        <label>{{localize "MONTAGE.Outcome.PartialSuccess"}}</label>
+      <div class="mts-field">
+        <label class="mts-label mts-label-partial">{{localize "MONTAGE.Outcome.PartialSuccess"}}</label>
         {{editor outcomesEnriched.partialSuccess target="system.outcomes.partialSuccess" button=false owner=isOwner editable=true engine="prosemirror"}}
       </div>
-
-      <div class="form-group stacked">
-        <label>{{localize "MONTAGE.Outcome.TotalFailure"}}</label>
+      <div class="mts-field">
+        <label class="mts-label mts-label-failure">{{localize "MONTAGE.Outcome.TotalFailure"}}</label>
         {{editor outcomesEnriched.totalFailure target="system.outcomes.totalFailure" button=false owner=isOwner editable=true engine="prosemirror"}}
       </div>
 
       {{#if tally.outcomeKey}}
-      <hr />
-      <div class="montage-outcome montage-outcome-{{tally.outcomeKey}}">
-        <h3>{{tally.outcomeLabel}}</h3>
-      </div>
+      <div class="mts-outcome-banner mts-outcome-{{tally.outcomeKey}}">{{tally.outcomeLabel}}</div>
       {{/if}}
     </div>
     {{/if}}
 
-    {{!-- RESULTS (all users; players see read-only view) --}}
-    <div class="tab" data-group="primary" data-tab="results">
-      <div class="montage-results-header">
-        <div class="montage-results-tally">
-          <span class="montage-badge montage-status-active">{{localize "MONTAGE.Tracker.Successes"}}: {{tally.successes}}</span>
-          <span class="montage-badge montage-status-active">{{localize "MONTAGE.Tracker.Failures"}}: {{tally.failures}}</span>
-          {{#if tally.outcomeKey}}
-          <span class="montage-badge montage-status-resolved">{{tally.outcomeLabel}}</span>
-          {{/if}}
-        </div>
+    {{!-- ─────────────────────────────────────────────── RESULTS ── --}}
+    <div class="tab mts-tab-panel" data-group="primary" data-tab="results">
 
-        <div class="montage-results-limits">
-          <span class="notes">{{localize "MONTAGE.Config.SuccessLimit"}}: {{item.system.successLimit}}</span>
-          <span class="notes">{{localize "MONTAGE.Config.FailureLimit"}}: {{item.system.failureLimit}}</span>
-        </div>
+      <div class="mts-tally-bar">
+        <span class="mts-tally-chip mts-chip-success">
+          {{localize "MONTAGE.Tracker.Successes"}}: {{tally.successes}} / {{item.system.successLimit}}
+        </span>
+        <span class="mts-tally-chip mts-chip-failure">
+          {{localize "MONTAGE.Tracker.Failures"}}: {{tally.failures}} / {{item.system.failureLimit}}
+        </span>
+        {{#if tally.outcomeKey}}
+        <span class="mts-tally-chip mts-chip-outcome">{{tally.outcomeLabel}}</span>
+        {{/if}}
       </div>
 
-      <section class="montage-participants">
-        {{#if isGM}}
-        <header class="flexrow montage-participants-header">
-          <h3>{{localize "MONTAGE.Sheet.Participants"}}</h3>
-          <button type="button" data-action="addParticipant" class="montage-btn-primary">
-            <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Sheet.AddParticipant"}}
-          </button>
-        </header>
-        <div class="notes montage-participants-drop">{{localize "MONTAGE.Sheet.DropActor"}}</div>
-        {{else}}
-        <h3>{{localize "MONTAGE.Sheet.Participants"}}</h3>
-        <p class="notes">{{localize "MONTAGE.Sheet.ResultsNote"}}</p>
-        {{/if}}
+      {{#if isGM}}
+      <div class="mts-participants-header">
+        <span class="mts-section-heading">{{localize "MONTAGE.Sheet.Participants"}}</span>
+        <button type="button" class="mts-add-btn" data-action="addParticipant">
+          <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Sheet.AddParticipant"}}
+        </button>
+      </div>
+      <div class="mts-drop-zone montage-participants-drop">
+        <i class="fa-solid fa-user-plus"></i> {{localize "MONTAGE.Sheet.DropActor"}}
+      </div>
+      {{else}}
+      <p class="mts-hint">{{localize "MONTAGE.Sheet.ResultsNote"}}</p>
+      {{/if}}
 
-        {{#if participants.length}}
-        <table class="montage-results-table">
-          <thead>
-            <tr>
-              <th>{{localize "MONTAGE.Sheet.Hero"}}</th>
-              <th>{{localize "MONTAGE.Tracker.Round"}} 1</th>
-              <th>{{localize "MONTAGE.Tracker.Round"}} 2</th>
-              {{#if isGM}}<th></th>{{/if}}
-            </tr>
-          </thead>
-          <tbody>
-            {{#each participants}}
-            <tr>
-              <td class="montage-hero-cell">
-                <img src="{{this.img}}" class="montage-hero-thumb" />
-                {{#if ../isGM}}
-                <input type="hidden" name="system.participants.{{this.index}}.actorUuid" value="{{this.actorUuid}}" />
-                <input type="text" name="system.participants.{{this.index}}.name" value="{{this.name}}" placeholder="{{localize 'MONTAGE.Sheet.HeroName'}}" />
-                <input type="hidden" name="system.participants.{{this.index}}.img" value="{{this.img}}" />
-                {{else}}
-                <span>{{this.name}}</span>
-                {{/if}}
-              </td>
-
-              <td>
-                {{#if ../isGM}}
-                <select name="system.participants.{{this.index}}.round1">
-                  {{#each ../resultChoices}}
-                  <option value="{{this.value}}" {{#if (eq this.value ../round1)}}selected{{/if}}>{{this.label}}</option>
-                  {{/each}}
-                </select>
-                {{else}}
-                <span class="montage-result-badge montage-result-{{this.round1}}">{{this.round1}}</span>
-                {{/if}}
-              </td>
-
-              <td>
-                {{#if ../isGM}}
-                <select name="system.participants.{{this.index}}.round2">
-                  {{#each ../resultChoices}}
-                  <option value="{{this.value}}" {{#if (eq this.value ../round2)}}selected{{/if}}>{{this.label}}</option>
-                  {{/each}}
-                </select>
-                {{else}}
-                <span class="montage-result-badge montage-result-{{this.round2}}">{{this.round2}}</span>
-                {{/if}}
-              </td>
-
+      {{#if participants.length}}
+      <table class="mts-results-table">
+        <thead>
+          <tr>
+            <th>{{localize "MONTAGE.Sheet.Hero"}}</th>
+            <th>{{localize "MONTAGE.Tracker.Round"}} 1</th>
+            <th>{{localize "MONTAGE.Tracker.Round"}} 2</th>
+            {{#if isGM}}<th></th>{{/if}}
+          </tr>
+        </thead>
+        <tbody>
+          {{#each participants}}
+          <tr>
+            <td class="mts-hero-cell">
+              <img class="mts-hero-thumb" src="{{this.img}}" />
               {{#if ../isGM}}
-              <td class="montage-row-actions">
-                <button type="button" data-action="removeParticipant" data-index="{{this.index}}" class="montage-btn-danger">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </td>
+              <input type="hidden" name="system.participants.{{this.index}}.actorUuid" value="{{this.actorUuid}}" />
+              <input type="hidden" name="system.participants.{{this.index}}.img" value="{{this.img}}" />
+              <input class="mts-text-input" type="text"
+                     name="system.participants.{{this.index}}.name"
+                     value="{{this.name}}"
+                     placeholder="{{localize 'MONTAGE.Sheet.HeroName'}}" />
+              {{else}}
+              <span class="mts-hero-name">{{this.name}}</span>
               {{/if}}
-            </tr>
-            {{/each}}
-          </tbody>
-        </table>
-        {{else}}
-        <p class="notes">{{localize "MONTAGE.Sheet.NoParticipants"}}</p>
-        {{/if}}
-      </section>
-    </div>
+            </td>
+            <td>
+              {{#if ../isGM}}
+              <select class="mts-select" name="system.participants.{{this.index}}.round1">
+                {{#each ../resultChoices}}
+                <option value="{{this.value}}" {{#if (eq this.value ../round1)}}selected{{/if}}>{{this.label}}</option>
+                {{/each}}
+              </select>
+              {{else}}
+              <span class="mts-result-chip mts-result-{{this.round1}}">{{this.round1}}</span>
+              {{/if}}
+            </td>
+            <td>
+              {{#if ../isGM}}
+              <select class="mts-select" name="system.participants.{{this.index}}.round2">
+                {{#each ../resultChoices}}
+                <option value="{{this.value}}" {{#if (eq this.value ../round2)}}selected{{/if}}>{{this.label}}</option>
+                {{/each}}
+              </select>
+              {{else}}
+              <span class="mts-result-chip mts-result-{{this.round2}}">{{this.round2}}</span>
+              {{/if}}
+            </td>
+            {{#if ../isGM}}
+            <td class="mts-actions-cell">
+              <button type="button" class="mts-icon-btn mts-danger"
+                      data-action="removeParticipant" data-index="{{this.index}}">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+            {{/if}}
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{else}}
+      <p class="mts-hint mts-hint-center">{{localize "MONTAGE.Sheet.NoParticipants"}}</p>
+      {{/if}}
 
-  </section>
+    </div>{{!-- /results --}}
+
+  </div>{{!-- /mts-tab-body --}}
 </form>

@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    Draw Steel Montage Test Tool — Styles
    ========================================================================== */
 
@@ -27,315 +27,107 @@
 }
 
 /* --------------------------------------------------------------------------
-   Montage Test Item Sheet
-   The item sheet renders inside Draw Steel's parchment-background window, so
-   all text must use dark colours (not the near-white used on the dark tracker apps).
+   Montage Test Item Sheet  (mts-* namespaced, fully self-contained)
    -------------------------------------------------------------------------- */
 
-/* Scope dark-on-light overrides to the form element which carries the class. */
-form.montage-test-sheet {
-  --montage-text:     #2c1810;   /* dark brown — readable on parchment */
-  --montage-text-dim: #5c4033;
-  --montage-border:   #8b6452;
-  --montage-subtext:  #4a3728;
-  color: var(--montage-text);
-}
-
-/* Re-target the window-content colour for item-sheet windows. The app element
-   also carries .montage-test-sheet so this specificity beats the shared rule. */
-.montage-test-sheet.sheet .window-content {
-  color: var(--montage-text);
-}
-
-form.montage-test-sheet label,
-form.montage-test-sheet h1,
-form.montage-test-sheet h2,
-form.montage-test-sheet h3,
-form.montage-test-sheet .sheet-tabs a.item,
-form.montage-test-sheet .tabs a {
-  color: var(--montage-text);
-}
-
-form.montage-test-sheet input[type="text"],
-form.montage-test-sheet input[type="number"],
-form.montage-test-sheet textarea,
-form.montage-test-sheet select {
-  color: var(--montage-text);
-  background: rgba(255, 255, 255, 0.55);
-  border-color: var(--montage-border);
-}
-
-form.montage-test-sheet .montage-readonly-block {
-  border-color: rgba(0, 0, 0, 0.15);
-  background: rgba(0, 0, 0, 0.04);
-  color: var(--montage-text);
-}
-
-form.montage-test-sheet .montage-results-table th,
-form.montage-test-sheet .montage-results-table td {
-  border-bottom-color: rgba(0, 0, 0, 0.1);
-  color: var(--montage-text);
-}
-
-/* Force complications rows to a clean two-column grid, preventing any system
-   CSS from injecting extra columns or checkbox-like styling. */
-form.montage-test-sheet .montage-complications-round {
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  margin-bottom: 16px;
-}
-
-form.montage-test-sheet .montage-complications-round h3 {
-  margin: 0 0 6px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+form.mts-form {
+  --mts-text:        #2c1810;
+  --mts-text-dim:    #5c4033;
+  --mts-border:      #b09070;
+  --mts-input-bg:    rgba(255,255,255,0.65);
+  --mts-accent:      #1565c0;
+  --mts-success-bg:  rgba(46,125,50,0.12);
+  --mts-success-fg:  #1b5e20;
+  --mts-failure-bg:  rgba(198,40,40,0.12);
+  --mts-failure-fg:  #b71c1c;
+  --mts-warn-bg:     rgba(239,108,0,0.12);
+  --mts-warn-fg:     #e65100;
+  --mts-radius:      5px;
+  color: var(--mts-text);
   font-size: 13px;
-  font-weight: 700;
-}
-
-form.montage-test-sheet .montage-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 6px;
+  height: 100%;
 }
+.montage-test-sheet.sheet .window-content { color: #2c1810; }
 
-form.montage-test-sheet .montage-list-row {
-  display: grid !important;
-  grid-template-columns: 1fr 32px !important;
-  grid-template-rows: auto !important;
-  align-items: center;
-  gap: 4px;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
-  background: none !important;
-}
+/* Header */
+.mts-header { padding: 8px 12px 6px; border-bottom: 1px solid var(--mts-border); background: rgba(0,0,0,0.03); }
+.mts-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.mts-name-input { flex:1; font-size:16px; font-weight:700; color:var(--mts-text)!important; background:transparent!important; border:none!important; border-bottom:1px solid var(--mts-border)!important; border-radius:0!important; padding:2px 0!important; min-width:0; }
+.mts-name-input:focus { border-bottom-color: var(--mts-accent)!important; outline:none!important; }
+.mts-name-display { flex:1; font-size:16px; font-weight:700; color:var(--mts-text); }
+.mts-push-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; background:var(--mts-accent); color:#fff!important; border:none; border-radius:var(--mts-radius); font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+.mts-push-btn:hover { background: #1976d2; }
+.mts-config-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 
-/* Hide any pseudo-elements the system or Foundry might inject */
-form.montage-test-sheet .montage-list-row::before,
-form.montage-test-sheet .montage-list-row::after {
-  display: none !important;
-  content: none !important;
-}
+/* Form controls */
+.mts-label { font-size:11px; font-weight:600; color:var(--mts-text-dim); white-space:nowrap; }
+.mts-select, .mts-number, .mts-text-input { color:var(--mts-text)!important; background:var(--mts-input-bg)!important; border:1px solid var(--mts-border)!important; border-radius:var(--mts-radius)!important; padding:3px 6px!important; font-size:12px; }
+.mts-select:focus, .mts-number:focus, .mts-text-input:focus { outline:none!important; border-color:var(--mts-accent)!important; }
+.mts-number { width:64px; }
+.mts-text-input { width:100%; min-width:0; box-sizing:border-box; }
 
-form.montage-test-sheet .montage-list-row input[type="text"] {
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  margin: 0 !important;
-  box-sizing: border-box;
-  color: var(--montage-text);
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid var(--montage-border);
-}
+/* Tabs */
+.mts-tabs { display:flex!important; flex-direction:row!important; flex-wrap:nowrap!important; gap:0!important; margin:0!important; padding:0 12px!important; border-bottom:2px solid var(--mts-border)!important; background:transparent!important; }
+.mts-tab { padding:7px 14px!important; font-size:12px!important; font-weight:600!important; color:var(--mts-text-dim)!important; cursor:pointer!important; border:none!important; border-bottom:2px solid transparent!important; margin-bottom:-2px!important; text-decoration:none!important; background:none!important; white-space:nowrap!important; }
+.mts-tab:hover { color:var(--mts-text)!important; }
+.mts-tab.active { color:var(--mts-accent)!important; border-bottom-color:var(--mts-accent)!important; }
 
-form.montage-test-sheet .montage-list-row input[type="text"]::before,
-form.montage-test-sheet .montage-list-row input[type="text"]::after {
-  display: none !important;
-  content: none !important;
-}
+/* Tab body */
+.mts-tab-body { padding:12px!important; overflow-y:auto; flex:1; }
 
-form.montage-test-sheet .montage-list-row button[data-action="removeComplication"] {
-  grid-column: 2 !important;
-  grid-row: 1 !important;
-  width: 32px;
-  height: 28px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(180, 50, 50, 0.4);
-  border-radius: 4px;
-  background: rgba(180, 50, 50, 0.08);
-  color: #a33;
-  cursor: pointer;
-  flex-shrink: 0;
-}
+/* Fields */
+.mts-field { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
+.mts-field .editor { min-height:120px; border:1px solid var(--mts-border)!important; border-radius:var(--mts-radius)!important; background:var(--mts-input-bg)!important; }
+.mts-field .editor-content, .mts-field .ProseMirror { padding:6px 8px!important; color:var(--mts-text)!important; min-height:112px; }
+.mts-prose-readonly { padding:8px; min-height:60px; border:1px solid var(--mts-border); border-radius:var(--mts-radius); background:rgba(0,0,0,0.03); color:var(--mts-text); }
+.mts-hint { font-size:11px; color:var(--mts-text-dim); margin:0 0 8px; }
+.mts-hint-center { text-align:center; }
+.mts-label-success { color: var(--mts-success-fg); }
+.mts-label-partial  { color: var(--mts-warn-fg); }
+.mts-label-failure  { color: var(--mts-failure-fg); }
+.mts-outcome-banner { margin-top:10px; padding:8px 12px; border-radius:var(--mts-radius); font-weight:700; font-size:13px; text-align:center; border:2px solid; }
+.mts-outcome-totalSuccess   { background:var(--mts-success-bg); color:var(--mts-success-fg); border-color:var(--mts-success-fg); }
+.mts-outcome-partialSuccess { background:var(--mts-warn-bg);    color:var(--mts-warn-fg);    border-color:var(--mts-warn-fg); }
+.mts-outcome-totalFailure   { background:var(--mts-failure-bg); color:var(--mts-failure-fg); border-color:var(--mts-failure-fg); }
 
-/* Complication rich-text editor entries */
-form.montage-test-sheet .montage-complication-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 8px;
-}
+/* Section heading */
+.mts-section-heading { font-size:12px; font-weight:700; color:var(--mts-text); text-transform:uppercase; letter-spacing:0.5px; margin:0; }
 
-form.montage-test-sheet .montage-complication-entry {
-  display: grid;
-  grid-template-columns: 1fr 34px;
-  gap: 4px;
-  align-items: start;
-}
+/* Complications */
+.mts-complications-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.mts-comp-round { display:flex; flex-direction:column; gap:6px; }
+.mts-comp-list { display:flex; flex-direction:column; gap:4px; }
+.mts-comp-row { display:grid; grid-template-columns:1fr 32px; gap:4px; align-items:center; }
+.mts-comp-readonly { margin:0; padding-left:16px; color:var(--mts-text); font-size:12px; }
 
-form.montage-test-sheet .montage-complication-entry .editor {
-  min-height: 60px;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid var(--montage-border);
-  border-radius: var(--montage-radius);
-}
+/* Buttons */
+.mts-add-btn { display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:var(--mts-accent); color:#fff!important; border:none; border-radius:var(--mts-radius); font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; }
+.mts-add-btn:hover { background: #1976d2; }
+.mts-icon-btn { display:flex; align-items:center; justify-content:center; width:30px; height:28px; padding:0; border-radius:var(--mts-radius); border:1px solid transparent; cursor:pointer; font-size:12px; background:rgba(0,0,0,0.06); color:var(--mts-text); }
+.mts-icon-btn.mts-danger { border-color:rgba(180,40,40,0.4); background:rgba(180,40,40,0.08); color:#a33; }
+.mts-icon-btn.mts-danger:hover { background:rgba(180,40,40,0.2); }
 
-form.montage-test-sheet .montage-complication-entry .editor-content {
-  padding: 4px 6px;
-  color: var(--montage-text);
-  min-height: 52px;
-}
-
-form.montage-test-sheet .montage-complication-entry button {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(180, 50, 50, 0.4);
-  border-radius: 4px;
-  background: rgba(180, 50, 50, 0.08);
-  color: #a33;
-  cursor: pointer;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.montage-test-sheet .sheet-header {
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.montage-test-sheet .montage-header-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.montage-test-sheet .montage-header-title .charname {
-  flex: 1;
-  margin: 0;
-  border: none;
-}
-
-/* Push-to-players button in the header title row */
-.montage-test-sheet .montage-push-btn {
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.montage-test-sheet .montage-basic-row {
-  display: grid;
-  grid-template-columns: 140px 1fr 160px 90px 160px 90px;
-  gap: 6px;
-  align-items: center;
-}
-.montage-result-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  background: rgba(0, 0, 0, 0.06);
-  color: var(--montage-text);
-  text-transform: capitalize;
-}
-
-.montage-result-badge.montage-result-success {
-  background: rgba(40, 140, 50, 0.15);
-  color: #1a6628;
-}
-
-.montage-result-badge.montage-result-fail {
-  background: rgba(180, 40, 40, 0.15);
-  color: #a33;
-}
-
-.montage-test-sheet .sheet-header .profile {
-  border: 2px solid var(--montage-border);
-  border-radius: var(--montage-radius);
-  object-fit: cover;
-}
-
-.montage-test-sheet .sheet-tabs {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
-  margin-bottom: 8px;
-}
-
-.montage-test-sheet .sheet-tabs a.item {
-  padding: 6px 10px;
-}
-
-.montage-readonly-block {
-  padding: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: var(--montage-radius);
-  background: rgba(0, 0, 0, 0.04);
-  min-height: 80px;
-}
-
-.montage-readonly-list {
-  margin: 0;
-  padding-left: 18px;
-}
-
-.montage-list-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 6px;
-}
-
-.montage-list-row input[type="text"] {
-  flex: 1;
-}
-
-.montage-results-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-}
-
-.montage-results-tally {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.montage-participants-drop {
-  padding: 6px 8px;
-  border: 1px dashed rgba(0, 0, 0, 0.25);
-  border-radius: var(--montage-radius);
-  margin: 6px 0 10px;
-}
-
-.montage-results-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.montage-results-table th,
-.montage-results-table td {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 6px;
-  vertical-align: middle;
-}
-
-.montage-hero-cell {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.montage-row-actions {
-  width: 42px;
-  text-align: right;
-}
+/* Results tab */
+.mts-tally-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+.mts-tally-chip { display:inline-flex; align-items:center; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600; }
+.mts-chip-success { background:var(--mts-success-bg); color:var(--mts-success-fg); }
+.mts-chip-failure { background:var(--mts-failure-bg); color:var(--mts-failure-fg); }
+.mts-chip-outcome { background:rgba(21,101,192,0.12); color:#1565c0; }
+.mts-participants-header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+.mts-drop-zone { padding:6px 10px; border:1px dashed var(--mts-border); border-radius:var(--mts-radius); font-size:11px; color:var(--mts-text-dim); margin-bottom:10px; text-align:center; }
+.mts-results-table { width:100%; border-collapse:collapse; font-size:12px; }
+.mts-results-table th { text-align:left; padding:5px 8px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:var(--mts-text-dim); border-bottom:2px solid var(--mts-border); }
+.mts-results-table td { padding:5px 8px; vertical-align:middle; border-bottom:1px solid rgba(0,0,0,0.07); color:var(--mts-text); }
+.mts-hero-cell { display:flex; align-items:center; gap:6px; }
+.mts-hero-thumb { width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid var(--mts-border); flex-shrink:0; }
+.mts-hero-name { font-weight:600; }
+.mts-actions-cell { width:36px; text-align:right; }
+.mts-result-chip { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; text-transform:capitalize; background:rgba(0,0,0,0.06); color:var(--mts-text); }
+.mts-result-chip.mts-result-success { background:var(--mts-success-bg); color:var(--mts-success-fg); }
+.mts-result-chip.mts-result-fail    { background:var(--mts-failure-bg); color:var(--mts-failure-fg); }
+.mts-result-chip.mts-result-neither { background:rgba(0,0,0,0.08); color:var(--mts-text-dim); }
 
 /* --------------------------------------------------------------------------
    Hero Thumbnails
@@ -490,7 +282,9 @@ form.montage-test-sheet .montage-complication-entry button {
 
 /* --------------------------------------------------------------------------
    Outcome Display
-   -------------------------------------------------------------------------- */\n\n/* ProseMirror editor inside the montage test sheet */\nform.montage-test-sheet .editor {\n  background: rgba(255, 255, 255, 0.55);\n  border: 1px solid var(--montage-border);\n  border-radius: var(--montage-radius);\n  min-height: 100px;\n}\n\nform.montage-test-sheet .editor-content {\n  padding: 6px 8px;\n  color: var(--montage-text);\n  min-height: 92px;\n}\n\nform.montage-test-sheet .editor-container {\n  display: flex;\n  flex-direction: column;\n}\n\n.montage-outcome {
+   -------------------------------------------------------------------------- */
+
+.montage-outcome {
   text-align: center;
   padding: 12px;
   margin: 8px 0;

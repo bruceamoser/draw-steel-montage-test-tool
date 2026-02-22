@@ -69,11 +69,6 @@ export class MontageTestSheet extends ItemSheetV1 {
       partialSuccess: await TE.enrichHTML(system.outcomes?.partialSuccess ?? "", enrichOpts),
       totalFailure: await TE.enrichHTML(system.outcomes?.totalFailure ?? "", enrichOpts),
     };
-    const round1Raw = system.complications?.round1 ?? [];
-    const round2Raw = system.complications?.round2 ?? [];
-    const round1Enriched = await Promise.all(round1Raw.map((t) => TE.enrichHTML(t ?? "", enrichOpts)));
-    const round2Enriched = await Promise.all(round2Raw.map((t) => TE.enrichHTML(t ?? "", enrichOpts)));
-
     return {
       ...data,
       isGM: game.user.isGM,
@@ -87,18 +82,8 @@ export class MontageTestSheet extends ItemSheetV1 {
       descriptionEnriched,
       outcomesEnriched,
       complications: {
-        round1: round1Raw.map((text, index) => ({
-          index,
-          text,
-          textEnriched: round1Enriched[index],
-          targetName: `system.complications.round1.${index}`,
-        })),
-        round2: round2Raw.map((text, index) => ({
-          index,
-          text,
-          textEnriched: round2Enriched[index],
-          targetName: `system.complications.round2.${index}`,
-        })),
+        round1: (system.complications?.round1 ?? []).map((text, index) => ({ index, text })),
+        round2: (system.complications?.round2 ?? []).map((text, index) => ({ index, text })),
       },
       participants: participants.map((p, index) => ({
         index,
@@ -246,6 +231,17 @@ export class MontageTestSheet extends ItemSheetV1 {
    * Emit a socket event that instructs all connected players to open this item's sheet.
    */
   async #openForPlayers() {
+    // Grant Observer so the item appears in game.items for players
+    const newOwnership = {};
+    for (const user of game.users.filter((u) => !u.isGM)) {
+      if ((this.item.ownership[user.id] ?? CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE)
+          < CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER) {
+        newOwnership[user.id] = CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
+      }
+    }
+    if (Object.keys(newOwnership).length) {
+      await this.item.update({ ownership: { ...this.item.ownership, ...newOwnership } });
+    }
     game.socket.emit(SOCKET_NAME, {
       event: SOCKET_EVENTS.OPEN_ITEM_SHEET,
       data: { itemId: this.item.id },
