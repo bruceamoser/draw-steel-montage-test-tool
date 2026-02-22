@@ -24,6 +24,7 @@ export class MontageTestSheet extends ItemSheetV1 {
       classes: ["montage-app", "montage-test-sheet"],
       width: 720,
       height: 720,
+      submitOnClose: true,
       tabs: [{ navSelector: ".tabs", contentSelector: ".tab-content", initial: "basic" }],
     });
   }

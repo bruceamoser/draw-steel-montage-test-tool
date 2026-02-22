@@ -44,7 +44,7 @@
       <div class="mts-field">
         <label class="mts-label">{{localize "MONTAGE.Sheet.Description"}}</label>
         {{#if isGM}}
-        {{editor descriptionEnriched target="system.description" button=false owner=isOwner editable=true engine="prosemirror"}}
+        {{editor item.system.description target="system.description" button=false owner=isOwner editable=true engine="prosemirror"}}
         {{else}}
         <div class="mts-prose-readonly">{{{descriptionEnriched}}}</div>
         {{/if}}
@@ -56,7 +56,7 @@
       <div class="mts-field">
         <label class="mts-label">{{localize "MONTAGE.Sheet.Complications"}}</label>
         {{#if isGM}}
-        {{editor complicationsEnriched.round1 target="system.complications.round1" button=false owner=isOwner editable=true engine="prosemirror"}}
+        {{editor item.system.complications.round1 target="system.complications.round1" button=false owner=isOwner editable=true engine="prosemirror"}}
         {{else}}
         <div class="mts-prose-readonly">{{{complicationsEnriched.round1}}}</div>
         {{/if}}
@@ -64,7 +64,7 @@
       {{#if isGM}}
       <div class="mts-field">
         <label class="mts-label">{{localize "MONTAGE.Sheet.Outcomes"}}</label>
-        {{editor outcomesEnriched.round1 target="system.outcomes.round1" button=false owner=isOwner editable=true engine="prosemirror"}}
+        {{editor item.system.outcomes.round1 target="system.outcomes.round1" button=false owner=isOwner editable=true engine="prosemirror"}}
       </div>
       {{/if}}
     </div>
@@ -74,7 +74,7 @@
       <div class="mts-field">
         <label class="mts-label">{{localize "MONTAGE.Sheet.Complications"}}</label>
         {{#if isGM}}
-        {{editor complicationsEnriched.round2 target="system.complications.round2" button=false owner=isOwner editable=true engine="prosemirror"}}
+        {{editor item.system.complications.round2 target="system.complications.round2" button=false owner=isOwner editable=true engine="prosemirror"}}
         {{else}}
         <div class="mts-prose-readonly">{{{complicationsEnriched.round2}}}</div>
         {{/if}}
@@ -82,7 +82,7 @@
       {{#if isGM}}
       <div class="mts-field">
         <label class="mts-label">{{localize "MONTAGE.Sheet.Outcomes"}}</label>
-        {{editor outcomesEnriched.round2 target="system.outcomes.round2" button=false owner=isOwner editable=true engine="prosemirror"}}
+        {{editor item.system.outcomes.round2 target="system.outcomes.round2" button=false owner=isOwner editable=true engine="prosemirror"}}
       </div>
       {{/if}}
     </div>
