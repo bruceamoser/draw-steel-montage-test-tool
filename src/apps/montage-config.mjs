@@ -1,4 +1,5 @@
 import { MODULE_ID, MONTAGE_DIFFICULTY, TEST_STATUS, SOCKET_NAME, SOCKET_EVENTS } from "../config.mjs";
+import { MONTAGE_TEST_ITEM_TYPE } from "../items/montage-test-model.mjs";
 import { calculateLimits } from "../helpers/difficulty.mjs";
 import {
   createMontageTestData,
@@ -180,7 +181,22 @@ export class MontageConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
     }
 
     if (!this._phase2Initialized) {
-      this._phase2Data.complications = (testData.complications ?? []).map((c) => ({ ...c }));
+      let savedComplications = (testData.complications ?? []).map((c) => ({ ...c }));
+
+      // If no complications exist yet on the testData, try to seed from a montage test item
+      // matching the test name, or the first available montage test item in the world.
+      if (savedComplications.length === 0) {
+        const item = game.items?.find(i => i.type === MONTAGE_TEST_ITEM_TYPE && i.name === testData.name)
+          ?? game.items?.find(i => i.type === MONTAGE_TEST_ITEM_TYPE);
+        if (item) {
+          const r1 = (item.system.complications?.round1 ?? []).filter(Boolean);
+          const r2 = (item.system.complications?.round2 ?? []).filter(Boolean);
+          for (const desc of r1) savedComplications.push(createComplication({ description: desc, triggerRound: 1 }));
+          for (const desc of r2) savedComplications.push(createComplication({ description: desc, triggerRound: 2 }));
+        }
+      }
+
+      this._phase2Data.complications = savedComplications;
       this._phase2Data.gmNotes = {
         totalSuccess: testData.gmNotes?.totalSuccess ?? "",
         partialSuccess: testData.gmNotes?.partialSuccess ?? "",

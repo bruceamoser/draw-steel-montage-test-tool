@@ -77,6 +77,85 @@ form.montage-test-sheet .montage-results-table td {
   color: var(--montage-text);
 }
 
+/* Force complications rows to a clean two-column grid, preventing any system
+   CSS from injecting extra columns or checkbox-like styling. */
+form.montage-test-sheet .montage-complications-round {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-bottom: 16px;
+}
+
+form.montage-test-sheet .montage-complications-round h3 {
+  margin: 0 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+form.montage-test-sheet .montage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+form.montage-test-sheet .montage-list-row {
+  display: grid !important;
+  grid-template-columns: 1fr 32px !important;
+  grid-template-rows: auto !important;
+  align-items: center;
+  gap: 4px;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: none !important;
+}
+
+/* Hide any pseudo-elements the system or Foundry might inject */
+form.montage-test-sheet .montage-list-row::before,
+form.montage-test-sheet .montage-list-row::after {
+  display: none !important;
+  content: none !important;
+}
+
+form.montage-test-sheet .montage-list-row input[type="text"] {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  color: var(--montage-text);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--montage-border);
+}
+
+form.montage-test-sheet .montage-list-row input[type="text"]::before,
+form.montage-test-sheet .montage-list-row input[type="text"]::after {
+  display: none !important;
+  content: none !important;
+}
+
+form.montage-test-sheet .montage-list-row button[data-action="removeComplication"] {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(180, 50, 50, 0.4);
+  border-radius: 4px;
+  background: rgba(180, 50, 50, 0.08);
+  color: #a33;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .montage-test-sheet .sheet-header {
   gap: 12px;
   align-items: center;

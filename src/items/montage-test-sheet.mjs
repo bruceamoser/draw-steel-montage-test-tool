@@ -2,7 +2,7 @@
  * Montage Test Item Sheet
  */
 
-import { MODULE_ID, MONTAGE_DIFFICULTY } from "../config.mjs";
+import { MODULE_ID, MONTAGE_DIFFICULTY, DIFFICULTY_TABLE_BASE, BASE_HERO_COUNT, MIN_LIMIT } from "../config.mjs";
 import {
   MONTAGE_TEST_ITEM_TYPE,
   MONTAGE_TEST_OUTCOME,
@@ -106,6 +106,11 @@ export class MontageTestSheet extends ItemSheetV1 {
     // Only GM can mutate structure
     html.find("[data-action]").on("click", (event) => this.#onAction(event));
 
+    // Auto-recalculate limits when difficulty changes
+    html.find("[name='system.difficulty']").on("change", (event) => {
+      this.#recalcLimits(event.currentTarget.value);
+    });
+
     // Drag-drop actors into participants list
     const dropzone = html[0].querySelector(".montage-participants-drop");
     if (dropzone) {
@@ -139,6 +144,28 @@ export class MontageTestSheet extends ItemSheetV1 {
     }
   }
 
+  /**
+   * Recalculate successLimit and failureLimit based on current difficulty
+   * and participant count, using the Draw Steel difficulty table.
+   * @param {string} [difficultyOverride]  Use this difficulty value instead of the saved one
+   *                                       (needed when called from a change event before the
+   *                                       form has been saved).
+   */
+  async #recalcLimits(difficultyOverride) {
+    const system = this.item.system;
+    const difficulty = difficultyOverride ?? system.difficulty ?? "moderate";
+    const heroCount = (system.participants ?? []).length;
+    const base = DIFFICULTY_TABLE_BASE[difficulty] ?? DIFFICULTY_TABLE_BASE.moderate;
+    const delta = heroCount - BASE_HERO_COUNT;
+    const successLimit = Math.max(MIN_LIMIT, base.successLimit + delta);
+    const failureLimit = Math.max(MIN_LIMIT, base.failureLimit + delta);
+    await this.item.update({
+      "system.difficulty": difficulty,
+      "system.successLimit": successLimit,
+      "system.failureLimit": failureLimit,
+    });
+  }
+
   async #addComplication(round) {
     const r = round === "2" ? "round2" : "round1";
     const list = Array.from(this.item.system.complications?.[r] ?? []);
@@ -164,6 +191,7 @@ export class MontageTestSheet extends ItemSheetV1 {
       round2: "",
     });
     await this.item.update({ "system.participants": participants });
+    await this.#recalcLimits();
   }
 
   async #removeParticipant(index) {
@@ -171,6 +199,7 @@ export class MontageTestSheet extends ItemSheetV1 {
     if (index < 0 || index >= participants.length) return;
     participants.splice(index, 1);
     await this.item.update({ "system.participants": participants });
+    await this.#recalcLimits();
   }
 
   async #onDropActor(event) {

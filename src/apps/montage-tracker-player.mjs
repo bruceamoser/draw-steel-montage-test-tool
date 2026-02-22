@@ -1,4 +1,5 @@
 import { MODULE_ID, TEST_STATUS, ACTION_TYPE, CHARACTERISTIC_LABELS, getSkillLabel } from "../config.mjs";
+import { MONTAGE_TEST_ITEM_TYPE } from "../items/montage-test-model.mjs";
 import { loadActiveTest } from "../data/montage-test.mjs";
 import { hasHeroActedThisRound, getCurrentRound } from "../helpers/resolution.mjs";
 import { onStateUpdate, submitAction } from "../socket.mjs";
@@ -150,10 +151,30 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
       ? Math.min(100, Math.round((testData.currentFailures / testData.failureLimit) * 100))
       : 0;
 
-    // Active complications the player should know about
-    const activeComplications = testData.complications
+    // Active complications from testData (set in config app Phase 2)
+    const tdComplications = (testData.complications ?? [])
       .filter((c) => c.triggerRound <= testData.currentRound && !c.resolved)
-      .map((c) => ({ description: c.description }));
+      .map((c) => c.description)
+      .filter(Boolean);
+
+    // Also pull complications directly from the montage test item for the current round,
+    // so descriptions entered on the item sheet are visible to players without needing Phase 2.
+    const testItem = game.items?.find(i => i.type === MONTAGE_TEST_ITEM_TYPE && i.name === testData.name)
+      ?? game.items?.find(i => i.type === MONTAGE_TEST_ITEM_TYPE);
+    const itemComplications = [];
+    if (testItem) {
+      const round = testData.currentRound;
+      const rKey = round === 1 ? "round1" : "round2";
+      for (const desc of (testItem.system.complications?.[rKey] ?? [])) {
+        if (desc) itemComplications.push(desc);
+      }
+    }
+
+    // Merge, deduplicate by description text
+    const seen = new Set();
+    const activeComplications = [...tdComplications, ...itemComplications]
+      .filter(desc => { if (seen.has(desc)) return false; seen.add(desc); return true; })
+      .map(description => ({ description }));
 
     return {
       hasTest: true,
