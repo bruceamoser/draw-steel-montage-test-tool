@@ -1,7 +1,7 @@
 /**
  * Draw Steel Montage Test Tool
  * Main module entry point — registers hooks, socket, settings, and scene controls.
- * v0.4.1
+ * v0.4.2
  */
 import { MODULE_ID, SYSTEM_ID } from "./config.mjs";
 import { MontageAPI } from "./api/montage-api.mjs";
@@ -36,50 +36,6 @@ function _registerDataModel() {
   } else {
     CONFIG.Item.dataModels[MONTAGE_TEST_ITEM_TYPE] = MontageTestDataModel;
   }
-}
-
-/* ---------------------------------------- */
-/*  DrawSteelItem.createDialog patch        */
-/* ---------------------------------------- */
-
-const _CREATE_DIALOG_PATCHED = Symbol.for(`${MODULE_ID}.patchedCreateDialog`);
-
-/**
- * Patch DrawSteelItem.createDialog so that:
- *   1. Our data model is always in CONFIG.Item.dataModels when the type filter runs.
- *   2. The filter is effectively null-safe for any type without a registered model.
- *
- * Draw Steel's crashing line (item.mjs:34):
- *   types = types.filter(t => !CONFIG.Item.dataModels[t].metadata?.packOnly);
- * We re-register our model immediately before calling the original, which contains that line.
- */
-function _patchDrawSteelCreateDialog() {
-  const cls = CONFIG.Item?.documentClass;
-  if (!cls || cls[_CREATE_DIALOG_PATCHED]) return;
-
-  const original = cls.createDialog;
-  if (typeof original !== "function") return;
-
-  const type  = MONTAGE_TEST_ITEM_TYPE;
-  const model = MontageTestDataModel;
-
-  cls.createDialog = async function patchedCreateDialog(data = {}, createOptions = {}, options = {}) {
-    // Ensure our data model entry exists right before Draw Steel's filter runs.
-    try {
-      if (!CONFIG.Item.dataModels?.[type]) {
-        if (Object.isExtensible(CONFIG.Item.dataModels)) {
-          CONFIG.Item.dataModels[type] = model;
-        } else {
-          CONFIG.Item.dataModels = { ...CONFIG.Item.dataModels, [type]: model };
-        }
-      }
-    } catch { /* ignore */ }
-
-    return original.call(this, data, createOptions, options);
-  };
-
-  cls[_CREATE_DIALOG_PATCHED] = true;
-  log("Patched DrawSteelItem.createDialog");
 }
 
 /* ---------------------------------------- */
@@ -125,9 +81,6 @@ Hooks.once("setup", () => {
 
   // Re-register in case Draw Steel replaced CONFIG.Item.dataModels during its init.
   _registerDataModel();
-
-  // Patch createDialog after the system has established CONFIG.Item.documentClass.
-  _patchDrawSteelCreateDialog();
 });
 
 /* ---------------------------------------- */

@@ -1,6 +1,7 @@
 {
   "MONTAGE.ModuleTitle": "Draw Steel Montage Test Tool",
 
+  "TYPES.Item.draw-steel-montage.montageTest": "Montage Test",
   "MONTAGE.Item.MontageTest": "Montage Test",
   "MONTAGE.Item.DefaultName": "New Montage Test",
 

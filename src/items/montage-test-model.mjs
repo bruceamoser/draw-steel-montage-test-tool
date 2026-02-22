@@ -1,9 +1,11 @@
 /**
  * Montage Test Item Data Model
- * Foundry VTT v13+ TypeDataModel for Item type: "montageTest".
+ * Foundry VTT v13+ TypeDataModel for Item type: "draw-steel-montage.montageTest".
+ * Note: Foundry automatically prefixes module sub-types with the module ID at runtime,
+ * so the key in module.json is "montageTest" but the runtime type string is "draw-steel-montage.montageTest".
  */
 
-export const MONTAGE_TEST_ITEM_TYPE = "montageTest";
+export const MONTAGE_TEST_ITEM_TYPE = "draw-steel-montage.montageTest";
 
 export const MONTAGE_TEST_RESULT = {
   SUCCESS: "success",
