@@ -77,9 +77,10 @@ form.mts-form {
 
 /* Fields */
 .mts-field { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
-.mts-field .editor { min-height:120px; border:1px solid var(--mts-border)!important; border-radius:var(--mts-radius)!important; background:var(--mts-input-bg)!important; }
-.mts-field .editor-content, .mts-field .ProseMirror { padding:6px 8px!important; color:var(--mts-text)!important; min-height:112px; }
-.mts-prose-readonly { padding:8px; min-height:60px; border:1px solid var(--mts-border); border-radius:var(--mts-radius); background:rgba(0,0,0,0.03); color:var(--mts-text); }
+.mts-field .editor { min-height:120px; height:160px; resize:vertical; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--mts-border)!important; border-radius:var(--mts-radius)!important; background:var(--mts-input-bg)!important; }
+.mts-field .editor-content { overflow-y:auto!important; flex:1!important; min-height:0!important; }
+.mts-field .ProseMirror { padding:6px 8px!important; color:var(--mts-text)!important; min-height:100%; box-sizing:border-box; }
+.mts-prose-readonly { padding:8px; min-height:60px; max-height:200px; overflow-y:auto; resize:vertical; border:1px solid var(--mts-border); border-radius:var(--mts-radius); background:rgba(0,0,0,0.03); color:var(--mts-text); }
 .mts-hint { font-size:11px; color:var(--mts-text-dim); margin:0 0 8px; }
 .mts-hint-center { text-align:center; }
 .mts-label-success { color: var(--mts-success-fg); }
