@@ -1,6 +1,6 @@
 {
   "name": "draw-steel-montage",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "description": "Foundry VTT module for building, tracking, and resolving Montage Tests in Draw Steel.",
   "author": "bitTwiddleNinja",
   "license": "MIT",

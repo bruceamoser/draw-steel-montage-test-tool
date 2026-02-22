@@ -97,39 +97,4 @@ Hooks.once("ready", () => {
   log("Ready");
 });
 
-/* ---------------------------------------- */
-/*  Scene Controls                          */
-/* ---------------------------------------- */
-Hooks.on("getSceneControlButtons", (controls) => {
-  if (!_systemValid || !controls.tokens) return;
 
-  controls.tokens.tools.montageTest = {
-    name: "montageTest",
-    title: "MONTAGE.Controls.OpenMontage",
-    icon: "fa-solid fa-mountain-sun",
-    order: 999,
-    button: true,
-    visible: true,
-    onChange: () => ui.sidebar.activateTab("items"),
-  };
-});
-
-/* ---------------------------------------- */
-/*  Chat Commands                           */
-/* ---------------------------------------- */
-Hooks.on("chatMessage", (chatLog, message) => {
-  if (!_systemValid) return true;
-  const cmd = message.trim().toLowerCase();
-
-  if (cmd === "/montage") {
-    ui.sidebar.activateTab("items");
-    return false;
-  }
-
-  if (cmd === "/montage new" && game.user.isGM) {
-    game.modules.get(MODULE_ID)?.api?.createMontageTest?.({ renderSheet: true });
-    return false;
-  }
-
-  return true;
-});

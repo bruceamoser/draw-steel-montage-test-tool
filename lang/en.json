@@ -26,8 +26,6 @@
   "MONTAGE.TestResult.Fail": "Fail",
   "MONTAGE.TestResult.Neither": "Neither",
 
-  "MONTAGE.Controls.OpenMontage": "Montage Test",
-
   "MONTAGE.Status.Setup": "Setup",
   "MONTAGE.Status.Active": "Active",
   "MONTAGE.Status.Paused": "Paused",
