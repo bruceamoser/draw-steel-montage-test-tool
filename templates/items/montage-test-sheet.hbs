@@ -1,11 +1,15 @@
 <form class="montage-test-sheet" autocomplete="off">
   <header class="sheet-header flexrow">
     <div class="header-fields">
-      <h1 class="charname">
-        <input name="name" type="text" value="{{item.name}}" placeholder="{{localize 'MONTAGE.Item.MontageTest'}}" />
-      </h1>
-
       {{#if isGM}}
+      <div class="montage-header-title">
+        <h1 class="charname">
+          <input name="name" type="text" value="{{item.name}}" placeholder="{{localize 'MONTAGE.Item.MontageTest'}}" />
+        </h1>
+        <button type="button" class="montage-btn-primary montage-push-btn" data-action="openForPlayers">
+          <i class="fa-solid fa-share-from-square"></i> {{localize "MONTAGE.Sheet.OpenForPlayers"}}
+        </button>
+      </div>
       <div class="montage-basic-row">
         <label>{{localize "MONTAGE.Config.Difficulty"}}</label>
         <select name="system.difficulty">
@@ -19,11 +23,9 @@
 
         <label>{{localize "MONTAGE.Config.FailureLimit"}}</label>
         <input type="number" name="system.failureLimit" value="{{item.system.failureLimit}}" min="1" />
-
-        <button type="button" class="montage-btn-primary montage-push-btn" data-action="openForPlayers">
-          <i class="fa-solid fa-share-from-square"></i> {{localize "MONTAGE.Sheet.OpenForPlayers"}}
-        </button>
       </div>
+      {{else}}
+      <h1 class="charname">{{item.name}}</h1>
       {{/if}}
     </div>
   </header>
@@ -41,7 +43,7 @@
     <div class="tab" data-group="primary" data-tab="basic">
       <div class="form-group stacked">
         <label>{{localize "MONTAGE.Sheet.Description"}}</label>
-        {{editor descriptionEnriched target="system.description" button=false owner=isOwner editable=isGM}}
+        {{editor descriptionEnriched target="system.description" button=false owner=isOwner editable=isGM engine="prosemirror"}}
       </div>
     </div>
 
@@ -54,7 +56,7 @@
           <div class="montage-complication-list">
             {{#each complications.round1}}
             <div class="montage-complication-entry">
-              {{editor textEnriched target=targetName button=false owner=../isOwner editable=true}}
+              {{editor textEnriched target=targetName button=false owner=../isOwner editable=true engine="prosemirror"}}
               <button type="button" class="montage-btn-danger" data-action="removeComplication" data-round="1" data-index="{{this.index}}">
                 <i class="fa-solid fa-trash"></i>
               </button>
@@ -79,7 +81,7 @@
           <div class="montage-complication-list">
             {{#each complications.round2}}
             <div class="montage-complication-entry">
-              {{editor textEnriched target=targetName button=false owner=../isOwner editable=true}}
+              {{editor textEnriched target=targetName button=false owner=../isOwner editable=true engine="prosemirror"}}
               <button type="button" class="montage-btn-danger" data-action="removeComplication" data-round="2" data-index="{{this.index}}">
                 <i class="fa-solid fa-trash"></i>
               </button>
@@ -107,17 +109,17 @@
 
       <div class="form-group stacked">
         <label>{{localize "MONTAGE.Outcome.TotalSuccess"}}</label>
-        {{editor outcomesEnriched.totalSuccess target="system.outcomes.totalSuccess" button=false owner=isOwner editable=true}}
+        {{editor outcomesEnriched.totalSuccess target="system.outcomes.totalSuccess" button=false owner=isOwner editable=true engine="prosemirror"}}
       </div>
 
       <div class="form-group stacked">
         <label>{{localize "MONTAGE.Outcome.PartialSuccess"}}</label>
-        {{editor outcomesEnriched.partialSuccess target="system.outcomes.partialSuccess" button=false owner=isOwner editable=true}}
+        {{editor outcomesEnriched.partialSuccess target="system.outcomes.partialSuccess" button=false owner=isOwner editable=true engine="prosemirror"}}
       </div>
 
       <div class="form-group stacked">
         <label>{{localize "MONTAGE.Outcome.TotalFailure"}}</label>
-        {{editor outcomesEnriched.totalFailure target="system.outcomes.totalFailure" button=false owner=isOwner editable=true}}
+        {{editor outcomesEnriched.totalFailure target="system.outcomes.totalFailure" button=false owner=isOwner editable=true engine="prosemirror"}}
       </div>
 
       {{#if tally.outcomeKey}}
@@ -187,8 +189,8 @@
               <td>
                 {{#if ../isGM}}
                 <select name="system.participants.{{this.index}}.round1">
-                  {{#each ../../resultChoices}}
-                  <option value="{{this.value}}" {{#if (eq this.value ../this.round1)}}selected{{/if}}>{{this.label}}</option>
+                  {{#each ../resultChoices}}
+                  <option value="{{this.value}}" {{#if (eq this.value ../round1)}}selected{{/if}}>{{this.label}}</option>
                   {{/each}}
                 </select>
                 {{else}}
@@ -199,8 +201,8 @@
               <td>
                 {{#if ../isGM}}
                 <select name="system.participants.{{this.index}}.round2">
-                  {{#each ../../resultChoices}}
-                  <option value="{{this.value}}" {{#if (eq this.value ../this.round2)}}selected{{/if}}>{{this.label}}</option>
+                  {{#each ../resultChoices}}
+                  <option value="{{this.value}}" {{#if (eq this.value ../round2)}}selected{{/if}}>{{this.label}}</option>
                   {{/each}}
                 </select>
                 {{else}}

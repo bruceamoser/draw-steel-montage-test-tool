@@ -206,13 +206,31 @@ form.montage-test-sheet .montage-complication-entry button {
   margin-bottom: 8px;
 }
 
-/* Push-to-players button in the header basic row */
-.montage-test-sheet .montage-push-btn {
-  grid-column: span 1;
-  white-space: nowrap;
+.montage-test-sheet .montage-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
-/* Result badge for read-only participant table */
+.montage-test-sheet .montage-header-title .charname {
+  flex: 1;
+  margin: 0;
+  border: none;
+}
+
+/* Push-to-players button in the header title row */
+.montage-test-sheet .montage-push-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.montage-test-sheet .montage-basic-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 160px 90px 160px 90px;
+  gap: 6px;
+  align-items: center;
+}
 .montage-result-badge {
   display: inline-block;
   padding: 2px 8px;
@@ -238,13 +256,6 @@ form.montage-test-sheet .montage-complication-entry button {
   border: 2px solid var(--montage-border);
   border-radius: var(--montage-radius);
   object-fit: cover;
-}
-
-.montage-test-sheet .montage-basic-row {
-  display: grid;
-  grid-template-columns: 140px 1fr 160px 90px 160px 90px auto;
-  gap: 6px;
-  align-items: center;
 }
 
 .montage-test-sheet .sheet-tabs {

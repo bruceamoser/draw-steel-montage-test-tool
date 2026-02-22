@@ -61,17 +61,18 @@ export class MontageTestSheet extends ItemSheetV1 {
       : null;
 
     // Enrich rich-text fields for ProseMirror display
+    const TE = foundry.applications?.ux?.TextEditor ?? TextEditor;
     const enrichOpts = { relativeTo: this.item };
-    const descriptionEnriched = await TextEditor.enrichHTML(system.description ?? "", enrichOpts);
+    const descriptionEnriched = await TE.enrichHTML(system.description ?? "", enrichOpts);
     const outcomesEnriched = {
-      totalSuccess: await TextEditor.enrichHTML(system.outcomes?.totalSuccess ?? "", enrichOpts),
-      partialSuccess: await TextEditor.enrichHTML(system.outcomes?.partialSuccess ?? "", enrichOpts),
-      totalFailure: await TextEditor.enrichHTML(system.outcomes?.totalFailure ?? "", enrichOpts),
+      totalSuccess: await TE.enrichHTML(system.outcomes?.totalSuccess ?? "", enrichOpts),
+      partialSuccess: await TE.enrichHTML(system.outcomes?.partialSuccess ?? "", enrichOpts),
+      totalFailure: await TE.enrichHTML(system.outcomes?.totalFailure ?? "", enrichOpts),
     };
     const round1Raw = system.complications?.round1 ?? [];
     const round2Raw = system.complications?.round2 ?? [];
-    const round1Enriched = await Promise.all(round1Raw.map((t) => TextEditor.enrichHTML(t ?? "", enrichOpts)));
-    const round2Enriched = await Promise.all(round2Raw.map((t) => TextEditor.enrichHTML(t ?? "", enrichOpts)));
+    const round1Enriched = await Promise.all(round1Raw.map((t) => TE.enrichHTML(t ?? "", enrichOpts)));
+    const round2Enriched = await Promise.all(round2Raw.map((t) => TE.enrichHTML(t ?? "", enrichOpts)));
 
     return {
       ...data,
