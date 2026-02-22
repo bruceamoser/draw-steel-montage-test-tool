@@ -41,7 +41,7 @@
     <div class="tab" data-group="primary" data-tab="basic">
       <div class="form-group stacked">
         <label>{{localize "MONTAGE.Sheet.Description"}}</label>
-        {{editor content=descriptionEnriched target="system.description" button=false owner=isOwner editable=isGM}}
+        {{editor descriptionEnriched target="system.description" button=false owner=isOwner editable=isGM}}
       </div>
     </div>
 
@@ -54,7 +54,7 @@
           <div class="montage-complication-list">
             {{#each complications.round1}}
             <div class="montage-complication-entry">
-              {{editor content=textEnriched target=targetName button=false owner=../isOwner editable=true}}
+              {{editor textEnriched target=targetName button=false owner=../isOwner editable=true}}
               <button type="button" class="montage-btn-danger" data-action="removeComplication" data-round="1" data-index="{{this.index}}">
                 <i class="fa-solid fa-trash"></i>
               </button>
@@ -79,7 +79,7 @@
           <div class="montage-complication-list">
             {{#each complications.round2}}
             <div class="montage-complication-entry">
-              {{editor content=textEnriched target=targetName button=false owner=../isOwner editable=true}}
+              {{editor textEnriched target=targetName button=false owner=../isOwner editable=true}}
               <button type="button" class="montage-btn-danger" data-action="removeComplication" data-round="2" data-index="{{this.index}}">
                 <i class="fa-solid fa-trash"></i>
               </button>
@@ -107,17 +107,17 @@
 
       <div class="form-group stacked">
         <label>{{localize "MONTAGE.Outcome.TotalSuccess"}}</label>
-        {{editor content=outcomesEnriched.totalSuccess target="system.outcomes.totalSuccess" button=false owner=isOwner editable=true}}
+        {{editor outcomesEnriched.totalSuccess target="system.outcomes.totalSuccess" button=false owner=isOwner editable=true}}
       </div>
 
       <div class="form-group stacked">
         <label>{{localize "MONTAGE.Outcome.PartialSuccess"}}</label>
-        {{editor content=outcomesEnriched.partialSuccess target="system.outcomes.partialSuccess" button=false owner=isOwner editable=true}}
+        {{editor outcomesEnriched.partialSuccess target="system.outcomes.partialSuccess" button=false owner=isOwner editable=true}}
       </div>
 
       <div class="form-group stacked">
         <label>{{localize "MONTAGE.Outcome.TotalFailure"}}</label>
-        {{editor content=outcomesEnriched.totalFailure target="system.outcomes.totalFailure" button=false owner=isOwner editable=true}}
+        {{editor outcomesEnriched.totalFailure target="system.outcomes.totalFailure" button=false owner=isOwner editable=true}}
       </div>
 
       {{#if tally.outcomeKey}}
