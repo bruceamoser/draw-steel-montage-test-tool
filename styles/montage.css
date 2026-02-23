@@ -49,7 +49,7 @@ form.mts-form {
   flex-direction: column;
   height: 100%;
 }
-.montage-test-sheet.sheet .window-content { color: #2c1810; }
+.montage-test-sheet .window-content { color: #2c1810; }
 
 /* Header */
 .mts-header { padding: 8px 12px 6px; border-bottom: 1px solid var(--mts-border); background: rgba(0,0,0,0.03); }
@@ -78,6 +78,10 @@ form.mts-form {
 /* Fields */
 .mts-field { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
 .mts-field .editor { min-height:120px; height:160px; resize:vertical; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--mts-border)!important; border-radius:var(--mts-radius)!important; background:var(--mts-input-bg)!important; }
+/* V2 ProseMirror editor wrapper */
+.mts-editor-wrap { min-height:120px; height:160px; resize:vertical; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--mts-border)!important; border-radius:var(--mts-radius)!important; background:var(--mts-input-bg)!important; }
+.mts-editor-wrap prose-mirror { flex:1; overflow-y:auto; }
+.mts-editor-wrap .ProseMirror { padding:6px 8px!important; color:var(--mts-text)!important; min-height:100%; box-sizing:border-box; }
 .mts-field .editor-content { overflow-y:auto!important; flex:1!important; min-height:0!important; }
 .mts-field .ProseMirror { padding:6px 8px!important; color:var(--mts-text)!important; min-height:100%; box-sizing:border-box; }
 .mts-prose-readonly { padding:8px; min-height:60px; max-height:200px; overflow-y:auto; resize:vertical; border:1px solid var(--mts-border); border-radius:var(--mts-radius); background:rgba(0,0,0,0.03); color:var(--mts-text); }

@@ -1,5 +1,5 @@
 /**
- * Montage Test Item Sheet
+ * Montage Test Item Sheet — ApplicationV2 (Foundry v13+)
  */
 
 import { MODULE_ID, MONTAGE_DIFFICULTY, DIFFICULTY_TABLE_BASE, BASE_HERO_COUNT, MIN_LIMIT } from "../config.mjs";
@@ -10,43 +10,53 @@ import {
   computeOutcome,
 } from "./montage-test-model.mjs";
 
-const ItemSheetV1 = foundry.appv1?.sheets?.ItemSheet ?? ItemSheet;
+const _TextEditor = foundry.applications?.ux?.TextEditor?.implementation ?? TextEditor;
 
 /**
- * Minimal ItemSheet implementation for Foundry v13.
- * Uses a Handlebars template and simple action handlers for array editing.
+ * ApplicationV2 ItemSheet for Montage Tests.
+ * Uses HandlebarsApplicationMixin + ItemSheetV2, matching the Foundry v13+ pattern.
  */
-export class MontageTestSheet extends ItemSheetV1 {
+export class MontageTestSheet extends foundry.applications.api.HandlebarsApplicationMixin(
+  foundry.applications.sheets.ItemSheetV2,
+) {
+
+  // ── ApplicationV2 static config ────────────────────────────────────────────
+
+  static DEFAULT_OPTIONS = {
+    classes: ["montage-app", "montage-test-sheet"],
+    window: { width: 720, height: 720, resizable: true },
+    form: { submitOnChange: true, closeOnSubmit: false },
+    actions: {
+      addParticipant: MontageTestSheet.#onAddParticipant,
+      removeParticipant: MontageTestSheet.#onRemoveParticipant,
+    },
+  };
+
+  static PARTS = {
+    form: {
+      template: `modules/${MODULE_ID}/templates/items/montage-test-sheet.hbs`,
+      scrollable: [".mts-tab-body"],
+    },
+  };
+
+  // ── Instance state ─────────────────────────────────────────────────────────
+
+  /** Currently active primary tab */
+  _activeTab = "basic";
+
+  // ── Context preparation ────────────────────────────────────────────────────
 
   /** @override */
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      classes: ["montage-app", "montage-test-sheet"],
-      width: 720,
-      height: 720,
-      submitOnClose: true,
-      tabs: [{ navSelector: ".tabs", contentSelector: ".tab-content", initial: "basic" }],
-    });
-  }
-
-  /** @override */
-  get template() {
-    return `modules/${MODULE_ID}/templates/items/montage-test-sheet.hbs`;
-  }
-
-  /** @override */
-  async getData(options = {}) {
-    const data = super.getData(options);
-
-    const system = this.item.system;
+  async _prepareContext(options) {
+    const isGM = game.user.isGM;
+    const doc = this.document;
+    const system = doc.system;
     const participants = system.participants ?? [];
 
     const { successes, failures } = tallyParticipants(participants);
 
     const allMarksEntered = participants.length > 0 && participants.every((p) => {
-      const r1 = p.round1;
-      const r2 = p.round2;
-      return !!r1 && !!r2;
+      return !!p.round1 && !!p.round2;
     });
 
     const outcomeKey = computeOutcome({
@@ -61,24 +71,25 @@ export class MontageTestSheet extends ItemSheetV1 {
       ? `MONTAGE.Outcome.${outcomeKey.charAt(0).toUpperCase() + outcomeKey.slice(1)}`
       : null;
 
-    // Enrich rich-text fields for ProseMirror display
-    const TE = foundry.applications?.ux?.TextEditor ?? TextEditor;
-    const enrichOpts = { relativeTo: this.item };
-    const descriptionEnriched = await TE.enrichHTML(system.description ?? "", enrichOpts);
+    // Enrich rich-text fields for display (read-only mode for players)
+    const enrichOpts = { relativeTo: doc, async: true };
+    const descriptionEnriched = await _TextEditor.enrichHTML(system.description ?? "", enrichOpts);
     const outcomesEnriched = {
-      round1: await TE.enrichHTML(system.outcomes?.round1 ?? "", enrichOpts),
-      round2: await TE.enrichHTML(system.outcomes?.round2 ?? "", enrichOpts),
+      round1: await _TextEditor.enrichHTML(system.outcomes?.round1 ?? "", enrichOpts),
+      round2: await _TextEditor.enrichHTML(system.outcomes?.round2 ?? "", enrichOpts),
     };
     const complicationsEnriched = {
-      round1: await TE.enrichHTML(system.complications?.round1 ?? "", enrichOpts),
-      round2: await TE.enrichHTML(system.complications?.round2 ?? "", enrichOpts),
+      round1: await _TextEditor.enrichHTML(system.complications?.round1 ?? "", enrichOpts),
+      round2: await _TextEditor.enrichHTML(system.complications?.round2 ?? "", enrichOpts),
     };
 
     return {
-      ...data,
-      isGM: game.user.isGM,
-      itemType: this.item.type,
-      isMontageTest: this.item.type === MONTAGE_TEST_ITEM_TYPE,
+      item: doc,
+      isGM,
+      isOwner: doc.isOwner,
+      activeTab: this._activeTab,
+      itemType: doc.type,
+      isMontageTest: doc.type === MONTAGE_TEST_ITEM_TYPE,
       difficulties: Object.entries(MONTAGE_DIFFICULTY).map(([key, value]) => ({
         value,
         label: game.i18n.localize(`MONTAGE.Difficulty.${key.charAt(0) + key.slice(1).toLowerCase()}`),
@@ -112,61 +123,104 @@ export class MontageTestSheet extends ItemSheetV1 {
     };
   }
 
-  /** @override */
-  activateListeners(html) {
-    super.activateListeners(html);
+  // ── Rendering / listeners ──────────────────────────────────────────────────
 
-    // Only GM can mutate structure
-    html.find("[data-action]").on("click", (event) => this.#onAction(event));
+  /** @override */
+  _onRender(context, options) {
+    const root = this.element;
+
+    // Apply tab visibility BEFORE super — ProseMirror requires the host element
+    // to be in the visible DOM when it initialises.
+    this.#applyTabState(root);
+
+    super._onRender(context, options);
+
+    // Mount <prose-mirror> custom elements for GM editors.
+    // The V1 {{editor}} helper does not work in ApplicationV2. We use
+    // HTMLProseMirrorElement.create() directly so the element self-initialises
+    // when appended to the DOM.
+    if (game.user.isGM) {
+      const ProseMirrorEl = foundry.applications.elements.HTMLProseMirrorElement;
+      for (const wrap of root.querySelectorAll(".mts-editor-wrap[data-field]")) {
+        const fieldName = wrap.dataset.field;
+        const value = foundry.utils.getProperty(this.document, fieldName) ?? "";
+        const el = ProseMirrorEl.create({ value, editable: true });
+        wrap.appendChild(el);
+        // Save on ProseMirror blur/save event → direct document update.
+        el.addEventListener("save", async () => {
+          await this.document.update({ [fieldName]: el.value });
+        });
+      }
+    }
+
+    // Tab click handlers
+    for (const link of root.querySelectorAll(".mts-tabs .item[data-tab]")) {
+      link.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        this._activeTab = ev.currentTarget.dataset.tab;
+        this.#applyTabState(root);
+      });
+    }
 
     // Auto-recalculate limits when difficulty changes
-    html.find("[name='system.difficulty']").on("change", (event) => {
-      this.#recalcLimits(event.currentTarget.value);
-    });
+    const difficultySelect = root.querySelector("[name='system.difficulty']");
+    if (difficultySelect) {
+      difficultySelect.addEventListener("change", (ev) => {
+        this.#recalcLimits(ev.currentTarget.value);
+      });
+    }
 
     // Drag-drop actors into participants list
-    const dropzone = html[0].querySelector(".montage-participants-drop");
+    const dropzone = root.querySelector(".montage-participants-drop");
     if (dropzone) {
-      dropzone.addEventListener("drop", (event) => this.#onDropActor(event));
-      dropzone.addEventListener("dragover", (event) => event.preventDefault());
+      dropzone.addEventListener("drop", (ev) => this.#onDropActor(ev));
+      dropzone.addEventListener("dragover", (ev) => ev.preventDefault());
     }
   }
 
-  async #onAction(event) {
-    event.preventDefault();
-    const action = event.currentTarget?.dataset?.action;
-    if (!action) return;
-
-    if (!game.user.isGM) return;
-
-    switch (action) {
-      case "addParticipant":
-        return this.#addParticipant();
-
-      case "removeParticipant":
-        return this.#removeParticipant(Number(event.currentTarget.dataset.index));
-
-      default:
-        return;
+  #applyTabState(root) {
+    for (const link of root.querySelectorAll(".mts-tabs .item[data-tab]")) {
+      link.classList.toggle("active", link.dataset.tab === this._activeTab);
+    }
+    for (const pane of root.querySelectorAll(".mts-tab-body .tab[data-tab]")) {
+      pane.classList.toggle("active", pane.dataset.tab === this._activeTab);
     }
   }
+
+  // ── Form submit override ──────────────────────────────────────────────────
+
+  /** @override */
+  async _processSubmitData(event, form, formData) {
+    const obj = formData?.object ?? {};
+    if (Object.keys(obj).length) await this.document.update(obj);
+  }
+
+  // ── Action handlers (static, called via ApplicationV2 actions map) ────────
+
+  static async #onAddParticipant() {
+    await this.#addParticipant();
+  }
+
+  static async #onRemoveParticipant(event, target) {
+    const index = Number(target.dataset.index);
+    await this.#removeParticipant(index);
+  }
+
+  // ── Participant helpers ────────────────────────────────────────────────────
 
   /**
    * Recalculate successLimit and failureLimit based on current difficulty
    * and participant count, using the Draw Steel difficulty table.
-   * @param {string} [difficultyOverride]  Use this difficulty value instead of the saved one
-   *                                       (needed when called from a change event before the
-   *                                       form has been saved).
    */
   async #recalcLimits(difficultyOverride) {
-    const system = this.item.system;
+    const system = this.document.system;
     const difficulty = difficultyOverride ?? system.difficulty ?? "moderate";
     const heroCount = (system.participants ?? []).length;
     const base = DIFFICULTY_TABLE_BASE[difficulty] ?? DIFFICULTY_TABLE_BASE.moderate;
     const delta = heroCount - BASE_HERO_COUNT;
     const successLimit = Math.max(MIN_LIMIT, base.successLimit + delta);
     const failureLimit = Math.max(MIN_LIMIT, base.failureLimit + delta);
-    await this.item.update({
+    await this.document.update({
       "system.difficulty": difficulty,
       "system.successLimit": successLimit,
       "system.failureLimit": failureLimit,
@@ -174,7 +228,7 @@ export class MontageTestSheet extends ItemSheetV1 {
   }
 
   async #addParticipant(partial = {}) {
-    const participants = Array.from(this.item.system.participants ?? []);
+    const participants = Array.from(this.document.system.participants ?? []);
     participants.push({
       actorUuid: partial.actorUuid ?? "",
       name: partial.name ?? "",
@@ -182,26 +236,26 @@ export class MontageTestSheet extends ItemSheetV1 {
       round1: "",
       round2: "",
     });
-    await this.item.update({ "system.participants": participants });
+    await this.document.update({ "system.participants": participants });
     await this.#recalcLimits();
 
     // Auto-grant OBSERVER permission on this item to all non-GM users
     const newOwnership = {};
     for (const user of game.users.filter((u) => !u.isGM)) {
-      if ((this.item.ownership[user.id] ?? CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE) < CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER) {
+      if ((this.document.ownership[user.id] ?? CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE) < CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER) {
         newOwnership[user.id] = CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
       }
     }
     if (Object.keys(newOwnership).length) {
-      await this.item.update({ ownership: { ...this.item.ownership, ...newOwnership } });
+      await this.document.update({ ownership: { ...this.document.ownership, ...newOwnership } });
     }
   }
 
   async #removeParticipant(index) {
-    const participants = Array.from(this.item.system.participants ?? []);
+    const participants = Array.from(this.document.system.participants ?? []);
     if (index < 0 || index >= participants.length) return;
     participants.splice(index, 1);
-    await this.item.update({ "system.participants": participants });
+    await this.document.update({ "system.participants": participants });
     await this.#recalcLimits();
   }
 
@@ -210,19 +264,15 @@ export class MontageTestSheet extends ItemSheetV1 {
 
     event.preventDefault();
 
-    let data;
-    try {
-      data = JSON.parse(event.dataTransfer.getData("text/plain"));
-    } catch {
-      return;
-    }
+    const data = _TextEditor.getDragEventData?.(event)
+      ?? (() => { try { return JSON.parse(event.dataTransfer.getData("text/plain")); } catch { return null; } })();
 
-    if (data?.type !== "Actor") return;
+    if (!data || data.type !== "Actor") return;
 
     const actor = await fromUuid(data.uuid);
     if (!actor) return;
 
-    const already = (this.item.system.participants ?? []).some((p) => p.actorUuid === actor.uuid);
+    const already = (this.document.system.participants ?? []).some((p) => p.actorUuid === actor.uuid);
     if (already) return;
 
     await this.#addParticipant({
