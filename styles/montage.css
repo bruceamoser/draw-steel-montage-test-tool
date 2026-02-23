@@ -30,30 +30,11 @@
    Montage Test Item Sheet  (mts-* namespaced, fully self-contained)
    -------------------------------------------------------------------------- */
 
+/* ── Theme-adaptive colour tokens ──
+   Dark-mode defaults (Foundry + Draw Steel typically run dark).
+   Light-mode overrides below via @media and Foundry theme classes.
+   ───────────────────────────────────────────────────────────── */
 form.mts-form {
-  --mts-text:        #2c1810;
-  --mts-text-dim:    #5c4033;
-  --mts-border:      #b09070;
-  --mts-input-bg:    rgba(255,255,255,0.65);
-  --mts-accent:      #4dabf7;
-  --mts-success-bg:  rgba(46,125,50,0.12);
-  --mts-success-fg:  #1b5e20;
-  --mts-failure-bg:  rgba(198,40,40,0.12);
-  --mts-failure-fg:  #b71c1c;
-  --mts-warn-bg:     rgba(239,108,0,0.12);
-  --mts-warn-fg:     #e65100;
-  --mts-radius:      5px;
-  color: var(--mts-text);
-  font-size: 13px;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-.montage-test-sheet .window-content { color: var(--mts-text); }
-
-/* ── Dark mode overrides ── */
-:is([data-theme="dark"], .dark-mode) form.mts-form,
-@media (prefers-color-scheme: dark) { form.mts-form {
   --mts-text:        #e0ddd5;
   --mts-text-dim:    #b0a899;
   --mts-border:      #6a5a48;
@@ -65,8 +46,88 @@ form.mts-form {
   --mts-failure-fg:  #ef5350;
   --mts-warn-bg:     rgba(239,108,0,0.25);
   --mts-warn-fg:     #ffa726;
-} }
-:is([data-theme="dark"], .dark-mode) .montage-test-sheet .window-content { color: #e0ddd5; }
+  --mts-radius:      5px;
+  color: var(--mts-text);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.montage-test-sheet .window-content { color: var(--mts-text); }
+
+/* ── Light mode: OS-level fallback ── */
+@media (prefers-color-scheme: light) {
+  form.mts-form {
+    --mts-text:        #2c1810;
+    --mts-text-dim:    #5c4033;
+    --mts-border:      #b09070;
+    --mts-input-bg:    rgba(255,255,255,0.65);
+    --mts-accent:      #1565c0;
+    --mts-success-bg:  rgba(46,125,50,0.12);
+    --mts-success-fg:  #1b5e20;
+    --mts-failure-bg:  rgba(198,40,40,0.12);
+    --mts-failure-fg:  #b71c1c;
+    --mts-warn-bg:     rgba(239,108,0,0.12);
+    --mts-warn-fg:     #e65100;
+  }
+}
+
+/* ── Light mode: Foundry V13 theme classes / attributes ──
+   Higher specificity so they win over @media.                    */
+html.theme-light form.mts-form,
+body.theme-light form.mts-form,
+html[data-theme="light"] form.mts-form,
+body[data-theme="light"] form.mts-form {
+  --mts-text:        #2c1810;
+  --mts-text-dim:    #5c4033;
+  --mts-border:      #b09070;
+  --mts-input-bg:    rgba(255,255,255,0.65);
+  --mts-accent:      #1565c0;
+  --mts-success-bg:  rgba(46,125,50,0.12);
+  --mts-success-fg:  #1b5e20;
+  --mts-failure-bg:  rgba(198,40,40,0.12);
+  --mts-failure-fg:  #b71c1c;
+  --mts-warn-bg:     rgba(239,108,0,0.12);
+  --mts-warn-fg:     #e65100;
+}
+
+/* ── Dark mode: Foundry classes explicitly restore dark defaults ── */
+html.theme-dark form.mts-form,
+body.theme-dark form.mts-form,
+html[data-theme="dark"] form.mts-form,
+body[data-theme="dark"] form.mts-form {
+  --mts-text:        #e0ddd5;
+  --mts-text-dim:    #b0a899;
+  --mts-border:      #6a5a48;
+  --mts-input-bg:    rgba(0,0,0,0.35);
+  --mts-accent:      #4dabf7;
+  --mts-success-bg:  rgba(46,125,50,0.25);
+  --mts-success-fg:  #66bb6a;
+  --mts-failure-bg:  rgba(198,40,40,0.25);
+  --mts-failure-fg:  #ef5350;
+  --mts-warn-bg:     rgba(239,108,0,0.25);
+  --mts-warn-fg:     #ffa726;
+}
+
+/* ── Form controls: color-scheme for native chrome ── */
+form.mts-form select,
+form.mts-form input {
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  form.mts-form select,
+  form.mts-form input { color-scheme: light; }
+}
+html.theme-light form.mts-form select,
+body.theme-light form.mts-form select,
+html[data-theme="light"] form.mts-form select,
+body[data-theme="light"] form.mts-form select,
+html.theme-light form.mts-form input,
+body.theme-light form.mts-form input,
+html[data-theme="light"] form.mts-form input,
+body[data-theme="light"] form.mts-form input {
+  color-scheme: light;
+}
 
 /* Header */
 .mts-header { padding: 8px 12px 6px; border-bottom: 1px solid var(--mts-border); background: rgba(0,0,0,0.03); }
