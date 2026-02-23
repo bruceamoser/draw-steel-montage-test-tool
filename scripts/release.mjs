@@ -10,11 +10,13 @@
  *   - dist/module.json and dist/draw-steel-montage.zip (run build first)
  */
 
-import { readFileSync } from "node:fs";
-import { resolve, join } from "node:path";
+import { readFileSync, existsSync } from "node:fs";
+import { resolve, join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
 
-const ROOT = resolve(import.meta.dirname, "..");
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = resolve(__dirname, "..");
 const DIST = join(ROOT, "dist");
 
 /* ------------------------------------------------------------------ */
@@ -54,7 +56,6 @@ try {
   process.exit(1);
 }
 
-import { existsSync } from "node:fs";
 if (!existsSync(manifestPath)) {
   console.error(`ERROR: ${manifestPath} not found. Run 'npm run build' first.`);
   process.exit(1);
