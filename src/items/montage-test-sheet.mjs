@@ -166,6 +166,19 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
       dropzone.addEventListener("drop", (ev) => this.#onDropActor(ev));
       dropzone.addEventListener("dragover", (ev) => ev.preventDefault());
     }
+
+    // ── Participant result handling ──
+    // Foundry's FormDataExtended expands array-indexed form inputs into
+    // objects with numeric keys, not real Arrays.  TypeDataModel's ArrayField
+    // silently ignores these partial indexed updates.  We bypass the form
+    // pipeline entirely for participant data: explicit change listeners read
+    // the current DOM values and call document.update() with a proper Array.
+    const resultsTable = root.querySelector(".mts-results-table");
+    if (resultsTable) {
+      for (const input of resultsTable.querySelectorAll("select, input")) {
+        input.addEventListener("change", () => this.#saveParticipantsFromDOM());
+      }
+    }
   }
 
   #applyTabState(root) {
@@ -210,35 +223,38 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
   async _processSubmitData(event, form, formData) {
     if (!formData || typeof formData !== "object") return;
 
-    // FormDataExtended.object expands "system.participants.0.round1" into
-    // nested objects: { system: { participants: { "0": { round1: "..." } } } }.
-    // TypeDataModel's ArrayField does NOT support partial indexed updates via
-    // dot-notation paths — it requires a complete replacement Array.
-    //
-    // Strategy: flatten to dot-notation, extract participant indexed keys,
-    // rebuild as a proper Array, and pass everything to Document.update().
+    // Participant data is handled by dedicated change listeners that produce
+    // proper Arrays (see #saveParticipantsFromDOM).  Strip all participant-
+    // indexed keys from the form submission so the default pipeline doesn't
+    // try to update ArrayField with broken indexed paths.
     const flat = foundry.utils.flattenObject(formData);
-
-    const partRe = /^system\.participants\.(\d+)\.(.+)$/;
-    const partMap = new Map();
     for (const key of Object.keys(flat)) {
-      const m = key.match(partRe);
-      if (m) {
-        const idx = Number(m[1]);
-        if (!partMap.has(idx)) partMap.set(idx, {});
-        partMap.get(idx)[m[2]] = flat[key];
-        delete flat[key];
-      }
+      if (key.startsWith("system.participants")) delete flat[key];
     }
-    if (partMap.size > 0) {
-      const arr = [];
-      for (const [idx, obj] of [...partMap.entries()].sort((a, b) => a[0] - b[0])) {
-        arr[idx] = obj;
-      }
-      flat["system.participants"] = arr;
-    }
-
     if (Object.keys(flat).length) await this.document.update(flat);
+  }
+
+  /**
+   * Read all participant data from the DOM and save as a proper Array.
+   * Called by explicit change listeners on participant inputs, bypassing
+   * the form submission pipeline which cannot handle ArrayField updates.
+   */
+  async #saveParticipantsFromDOM() {
+    const current = Array.from(this.document.system.participants ?? []);
+    const root = this.element;
+    const updated = current.map((p, i) => {
+      const name = root.querySelector(`[name="system.participants.${i}.name"]`)?.value ?? p.name;
+      const round1 = root.querySelector(`[name="system.participants.${i}.round1"]`)?.value ?? p.round1;
+      const round2 = root.querySelector(`[name="system.participants.${i}.round2"]`)?.value ?? p.round2;
+      return {
+        actorUuid: p.actorUuid,
+        img: p.img,
+        name,
+        round1,
+        round2,
+      };
+    });
+    await this.document.update({ "system.participants": updated });
   }
 
   // ── Action handlers (static, called via ApplicationV2 actions map) ────────
