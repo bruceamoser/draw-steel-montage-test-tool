@@ -15,6 +15,9 @@ Thumbs.db
 *.swo
 *~
 
+# Local docs (not part of the module)
+ARCHITECTURE.md
+
 # Reference data (not part of the module)
 reference/
 
