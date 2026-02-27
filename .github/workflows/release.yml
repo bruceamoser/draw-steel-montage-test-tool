@@ -1,0 +1,98 @@
+name: Release Module
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Install zip
+        run: sudo apt-get install -y zip
+
+      - name: Build module (version-stamp module.json + create zip)
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+
+          # Stamp version into module.json
+          sed -i "s/#{VERSION}#/$VERSION/g" module.json
+
+          # Build the zip with the correct structure
+          mkdir -p dist/draw-steel-montage
+          cp module.json dist/draw-steel-montage/
+          cp -r src templates styles lang LICENSE dist/draw-steel-montage/
+          cd dist
+          zip -r draw-steel-montage.zip draw-steel-montage/
+          cp draw-steel-montage/module.json module.json
+          rm -rf draw-steel-montage
+          cd ..
+
+          echo "Built dist/module.json and dist/draw-steel-montage.zip for v$VERSION"
+          cat dist/module.json
+
+      - name: Upload assets to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          gh release upload "$TAG" dist/module.json dist/draw-steel-montage.zip --clobber
+
+      - name: Notify Foundry VTT Package API
+        env:
+          FOUNDRY_TOKEN: ${{ secrets.FOUNDRY_PACKAGE_RELEASE_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          REPO="${{ github.repository }}"
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://api.foundryvtt.com/_api/packages/release_version/" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: $FOUNDRY_TOKEN" \
+            -d "{
+              \"id\": \"draw-steel-montage\",
+              \"dry_run\": false,
+              \"release\": {
+                \"version\": \"$VERSION\",
+                \"manifest\": \"https://github.com/${REPO}/releases/download/${TAG}/module.json\",
+                \"notes\": \"https://github.com/${REPO}/releases/tag/${TAG}\",
+                \"compatibility\": {
+                  \"minimum\": \"13\",
+                  \"verified\": \"13.351\"
+                }
+              }
+            }")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "Status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "::error::Foundry API returned $HTTP_CODE: $BODY"
+            exit 1
+          fi
+
+          echo "Foundry VTT notified of release $VERSION"
