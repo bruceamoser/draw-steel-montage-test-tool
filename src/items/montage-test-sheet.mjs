@@ -209,12 +209,11 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
   /** @override */
   async _processSubmitData(event, form, formData) {
     if (!formData || typeof formData !== "object") return;
-    // formData may be FormDataExtended (has .object getter) or an expanded plain
-    // object returned by _prepareSubmitData.  Flatten to dot-notation paths so
-    // Document.update() handles ArrayField indexing reliably.
-    const raw = (typeof formData?.object === "object") ? formData.object : formData;
-    const flat = foundry.utils.flattenObject(raw);
-    if (Object.keys(flat).length) await this.document.update(flat);
+    // In Foundry v13 ApplicationV2, _prepareSubmitData returns the expanded
+    // object from FormDataExtended.object.  Pass it straight through to
+    // Document.update() — do NOT flatten, because ArrayField (participants)
+    // needs the full nested structure, not dot-notation indexed paths.
+    if (Object.keys(formData).length) await this.document.update(formData);
   }
 
   // ── Action handlers (static, called via ApplicationV2 actions map) ────────
