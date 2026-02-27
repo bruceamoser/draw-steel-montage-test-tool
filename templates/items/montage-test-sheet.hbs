@@ -97,10 +97,14 @@
         <span class="mts-tally-chip mts-chip-failure">
           {{localize "MONTAGE.Tracker.Failures"}}: {{tally.failures}} / {{item.system.failureLimit}}
         </span>
-        {{#if tally.outcomeKey}}
-        <span class="mts-tally-chip mts-chip-outcome">{{tally.outcomeLabel}}</span>
-        {{/if}}
       </div>
+
+      {{!-- Outcome Banner — shows when limits are reached or all marks entered --}}
+      {{#if tally.outcomeKey}}
+      <div class="mts-outcome-banner mts-outcome-{{tally.outcomeKey}}">
+        <i class="fa-solid fa-flag-checkered"></i> {{tally.outcomeLabel}}
+      </div>
+      {{/if}}
 
       {{#if isGM}}
       <div class="mts-participants-header">

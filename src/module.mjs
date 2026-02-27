@@ -3,10 +3,11 @@
  * Main module entry point — registers hooks, socket, settings, and scene controls.
  * v0.4.2
  */
-import { MODULE_ID, SYSTEM_ID } from "./config.mjs";
+import { MODULE_ID, SYSTEM_ID, FLAGS } from "./config.mjs";
 import { MontageAPI } from "./api/montage-api.mjs";
 import { MontageTestDataModel, MONTAGE_TEST_ITEM_TYPE } from "./items/montage-test-model.mjs";
 import { MontageTestSheet } from "./items/montage-test-sheet.mjs";
+import { initSocket } from "./socket.mjs";
 
 const log = (...args) => console.log(`${MODULE_ID} |`, ...args);
 
@@ -88,6 +89,34 @@ Hooks.once("setup", () => {
 /* ---------------------------------------- */
 Hooks.once("ready", () => {
   if (!_systemValid) return;
+
+  // Register module settings used by the real-time montage tracker
+  game.settings.register(MODULE_ID, FLAGS.ACTIVE_TEST, {
+    name: "Active Montage Test",
+    scope: "world",
+    config: false,
+    type: Object,
+    default: null,
+  });
+
+  game.settings.register(MODULE_ID, FLAGS.COMPLETED_TESTS, {
+    name: "Completed Montage Tests",
+    scope: "world",
+    config: false,
+    type: Array,
+    default: [],
+  });
+
+  game.settings.register(MODULE_ID, FLAGS.SAVED_TESTS, {
+    name: "Saved Draft Tests",
+    scope: "world",
+    config: false,
+    type: Array,
+    default: [],
+  });
+
+  // Initialize the socket handler for real-time montage communication
+  initSocket();
 
   const moduleInstance = game.modules.get(MODULE_ID);
   if (moduleInstance) {

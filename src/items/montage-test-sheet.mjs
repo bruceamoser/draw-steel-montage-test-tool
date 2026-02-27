@@ -135,30 +135,20 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
 
     super._onRender(context, options);
 
-    // Mount <prose-mirror> custom elements for GM editors.
-    // The V1 {{editor}} helper does not work in ApplicationV2. We use
-    // HTMLProseMirrorElement.create() directly so the element self-initialises
-    // when appended to the DOM.
+    // Mount ProseMirror editors only on the currently visible tab.
+    // Mounting on hidden (display:none) tabs can cause ProseMirror to hang
+    // during measurement, which freezes the entire sheet.
     if (game.user.isGM) {
-      const ProseMirrorEl = foundry.applications.elements.HTMLProseMirrorElement;
-      for (const wrap of root.querySelectorAll(".mts-editor-wrap[data-field]")) {
-        const fieldName = wrap.dataset.field;
-        const value = foundry.utils.getProperty(this.document, fieldName) ?? "";
-        const el = ProseMirrorEl.create({ value, editable: true });
-        wrap.appendChild(el);
-        // Save on ProseMirror blur/save event → direct document update.
-        el.addEventListener("save", async () => {
-          await this.document.update({ [fieldName]: el.value });
-        });
-      }
+      this.#mountProseMirrorEditors(root);
     }
 
-    // Tab click handlers
+    // Tab click handlers — re-mount editors when switching to a tab with editors
     for (const link of root.querySelectorAll(".mts-tabs .item[data-tab]")) {
       link.addEventListener("click", (ev) => {
         ev.preventDefault();
         this._activeTab = ev.currentTarget.dataset.tab;
         this.#applyTabState(root);
+        if (game.user.isGM) this.#mountProseMirrorEditors(root);
       });
     }
 
@@ -187,12 +177,44 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
     }
   }
 
+  /**
+   * Mount ProseMirror editors only inside the currently active tab pane.
+   * Skips wrappers that already have a mounted <prose-mirror> element.
+   * @param {HTMLElement} root
+   */
+  #mountProseMirrorEditors(root) {
+    const ProseMirrorEl = foundry.applications.elements?.HTMLProseMirrorElement;
+    if (!ProseMirrorEl) return;
+
+    const activePane = root.querySelector(`.mts-tab-body .tab[data-tab="${this._activeTab}"]`);
+    if (!activePane) return;
+
+    for (const wrap of activePane.querySelectorAll(".mts-editor-wrap[data-field]")) {
+      // Skip if already mounted
+      if (wrap.querySelector("prose-mirror")) continue;
+
+      const fieldName = wrap.dataset.field;
+      const value = foundry.utils.getProperty(this.document, fieldName) ?? "";
+      const el = ProseMirrorEl.create({ value, editable: true });
+      wrap.appendChild(el);
+      // Save on ProseMirror blur/save event → direct document update.
+      el.addEventListener("save", async () => {
+        await this.document.update({ [fieldName]: el.value });
+      });
+    }
+  }
+
   // ── Form submit override ──────────────────────────────────────────────────
 
   /** @override */
   async _processSubmitData(event, form, formData) {
-    const obj = formData?.object ?? {};
-    if (Object.keys(obj).length) await this.document.update(obj);
+    if (!formData || typeof formData !== "object") return;
+    // formData may be FormDataExtended (has .object getter) or an expanded plain
+    // object returned by _prepareSubmitData.  Flatten to dot-notation paths so
+    // Document.update() handles ArrayField indexing reliably.
+    const raw = (typeof formData?.object === "object") ? formData.object : formData;
+    const flat = foundry.utils.flattenObject(raw);
+    if (Object.keys(flat).length) await this.document.update(flat);
   }
 
   // ── Action handlers (static, called via ApplicationV2 actions map) ────────
@@ -236,27 +258,55 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
       round1: "",
       round2: "",
     });
-    await this.document.update({ "system.participants": participants });
-    await this.#recalcLimits();
+
+    // Compute new limits based on updated participant count
+    const difficulty = this.document.system.difficulty ?? "moderate";
+    const heroCount = participants.length;
+    const base = DIFFICULTY_TABLE_BASE[difficulty] ?? DIFFICULTY_TABLE_BASE.moderate;
+    const delta = heroCount - BASE_HERO_COUNT;
+    const successLimit = Math.max(MIN_LIMIT, base.successLimit + delta);
+    const failureLimit = Math.max(MIN_LIMIT, base.failureLimit + delta);
 
     // Auto-grant OBSERVER permission on this item to all non-GM users
-    const newOwnership = {};
+    const ownershipUpdate = {};
     for (const user of game.users.filter((u) => !u.isGM)) {
       if ((this.document.ownership[user.id] ?? CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE) < CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER) {
-        newOwnership[user.id] = CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
+        ownershipUpdate[user.id] = CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
       }
     }
-    if (Object.keys(newOwnership).length) {
-      await this.document.update({ ownership: { ...this.document.ownership, ...newOwnership } });
+
+    // Single consolidated update — avoids multiple re-renders that break ProseMirror
+    const updateData = {
+      "system.participants": participants,
+      "system.difficulty": difficulty,
+      "system.successLimit": successLimit,
+      "system.failureLimit": failureLimit,
+    };
+    if (Object.keys(ownershipUpdate).length) {
+      updateData.ownership = { ...this.document.ownership, ...ownershipUpdate };
     }
+    await this.document.update(updateData);
   }
 
   async #removeParticipant(index) {
     const participants = Array.from(this.document.system.participants ?? []);
     if (index < 0 || index >= participants.length) return;
     participants.splice(index, 1);
-    await this.document.update({ "system.participants": participants });
-    await this.#recalcLimits();
+
+    // Recalc limits inline and combine into single update
+    const difficulty = this.document.system.difficulty ?? "moderate";
+    const heroCount = participants.length;
+    const base = DIFFICULTY_TABLE_BASE[difficulty] ?? DIFFICULTY_TABLE_BASE.moderate;
+    const delta = heroCount - BASE_HERO_COUNT;
+    const successLimit = Math.max(MIN_LIMIT, base.successLimit + delta);
+    const failureLimit = Math.max(MIN_LIMIT, base.failureLimit + delta);
+
+    await this.document.update({
+      "system.participants": participants,
+      "system.difficulty": difficulty,
+      "system.successLimit": successLimit,
+      "system.failureLimit": failureLimit,
+    });
   }
 
   async #onDropActor(event) {
