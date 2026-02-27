@@ -209,11 +209,36 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
   /** @override */
   async _processSubmitData(event, form, formData) {
     if (!formData || typeof formData !== "object") return;
-    // In Foundry v13 ApplicationV2, _prepareSubmitData returns the expanded
-    // object from FormDataExtended.object.  Pass it straight through to
-    // Document.update() — do NOT flatten, because ArrayField (participants)
-    // needs the full nested structure, not dot-notation indexed paths.
-    if (Object.keys(formData).length) await this.document.update(formData);
+
+    // FormDataExtended.object expands "system.participants.0.round1" into
+    // nested objects: { system: { participants: { "0": { round1: "..." } } } }.
+    // TypeDataModel's ArrayField does NOT support partial indexed updates via
+    // dot-notation paths — it requires a complete replacement Array.
+    //
+    // Strategy: flatten to dot-notation, extract participant indexed keys,
+    // rebuild as a proper Array, and pass everything to Document.update().
+    const flat = foundry.utils.flattenObject(formData);
+
+    const partRe = /^system\.participants\.(\d+)\.(.+)$/;
+    const partMap = new Map();
+    for (const key of Object.keys(flat)) {
+      const m = key.match(partRe);
+      if (m) {
+        const idx = Number(m[1]);
+        if (!partMap.has(idx)) partMap.set(idx, {});
+        partMap.get(idx)[m[2]] = flat[key];
+        delete flat[key];
+      }
+    }
+    if (partMap.size > 0) {
+      const arr = [];
+      for (const [idx, obj] of [...partMap.entries()].sort((a, b) => a[0] - b[0])) {
+        arr[idx] = obj;
+      }
+      flat["system.participants"] = arr;
+    }
+
+    if (Object.keys(flat).length) await this.document.update(flat);
   }
 
   // ── Action handlers (static, called via ApplicationV2 actions map) ────────
