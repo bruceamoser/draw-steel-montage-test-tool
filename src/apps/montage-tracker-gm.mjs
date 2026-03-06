@@ -45,8 +45,8 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
       resizable: true,
     },
     position: {
-      width: 650,
-      height: 700,
+      width: 1138,
+      height: 1400,
     },
     actions: {
       activateTest: MontageTrackerGMApp.#onActivate,

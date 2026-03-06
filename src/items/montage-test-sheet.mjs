@@ -24,7 +24,7 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
 
   static DEFAULT_OPTIONS = {
     classes: ["montage-app", "montage-test-sheet"],
-    window: { width: 720, height: 720, resizable: true },
+    window: { width: 1260, height: 1440, resizable: true },
     form: { submitOnChange: true, closeOnSubmit: false },
     actions: {
       addParticipant: MontageTestSheet.#onAddParticipant,

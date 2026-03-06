@@ -25,8 +25,8 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
       resizable: true,
     },
     position: {
-      width: 500,
-      height: 550,
+      width: 875,
+      height: 1100,
     },
     actions: {
       submitAction: MontageTrackerPlayerApp.#onSubmitAction,
