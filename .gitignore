@@ -18,6 +18,7 @@ Thumbs.db
 
 # Local docs (not part of the module)
 ARCHITECTURE.md
+AUTOMATED-RELEASE-SETUP-PROMPT.md
 
 # Reference data (not part of the module)
 reference/
