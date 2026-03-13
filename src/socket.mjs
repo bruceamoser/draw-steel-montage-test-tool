@@ -324,10 +324,10 @@ export async function approveAction(actorId, approvalData = {}) {
     if (actor.statuses?.has?.("weakened")) modifiers.banes += 1;
     if (actor.statuses?.has?.("restrained") && ["might", "agility"].includes(chrKey)) modifiers.banes += 1;
 
-    // Skill selection in Draw Steel: +2 bonuses, plus per-skill edges/banes/bonuses via hero.skillModifiers.
+    // Skill selection in Draw Steel: +2 bonuses, plus per-skill edges/banes/bonuses via skills.modifiers.
     if (pending.skill) {
       modifiers.bonuses += 2;
-      const skillMods = actor?.system?.hero?.skillModifiers?.[pending.skill];
+      const skillMods = actor?.system?.skills?.modifiers?.[pending.skill];
       if (skillMods) {
         modifiers.edges += Number(skillMods.edges ?? 0);
         modifiers.banes += Number(skillMods.banes ?? 0);
