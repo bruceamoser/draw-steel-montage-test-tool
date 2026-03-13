@@ -114,7 +114,7 @@ export class MontageTrackerPlayerApp extends HandlebarsApplicationMixin(Applicat
 
     // Build skill options from the hero's actual skills (not all Draw Steel skills)
     const actor = game.actors.get(actorId);
-    const actorSkills = actor?.system?.hero?.skills;
+    const actorSkills = actor?.system?.skills?.value;
     let skillKeys = [];
     if (actorSkills) {
       // Handle Set, Array, or iterable
