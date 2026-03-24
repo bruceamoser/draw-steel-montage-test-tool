@@ -109,9 +109,14 @@
       {{#if isGM}}
       <div class="mts-participants-header">
         <span class="mts-section-heading">{{localize "MONTAGE.Sheet.Participants"}}</span>
-        <button type="button" class="mts-add-btn" data-action="addParticipant">
-          <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Sheet.AddParticipant"}}
-        </button>
+        <div class="mts-action-row">
+          <button type="button" class="mts-add-btn" data-action="addAllPlayers">
+            <i class="fa-solid fa-users"></i> {{localize "MONTAGE.Sheet.AddAllPlayers"}}
+          </button>
+          <button type="button" class="mts-add-btn" data-action="addParticipant">
+            <i class="fa-solid fa-plus"></i> {{localize "MONTAGE.Sheet.AddParticipant"}}
+          </button>
+        </div>
       </div>
       <div class="mts-drop-zone montage-participants-drop">
         <i class="fa-solid fa-user-plus"></i> {{localize "MONTAGE.Sheet.DropActor"}}

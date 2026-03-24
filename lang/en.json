@@ -15,6 +15,7 @@
   "MONTAGE.Sheet.OutcomesHint": "GM-only: describe what happens for each rules outcome.",
   "MONTAGE.Sheet.Participants": "Participants",
   "MONTAGE.Sheet.AddParticipant": "Add Participant",
+  "MONTAGE.Sheet.AddAllPlayers": "Add All Players",
   "MONTAGE.Sheet.DropActor": "Drag an Actor here to add them to the results table.",
   "MONTAGE.Sheet.Hero": "Hero",
   "MONTAGE.Sheet.HeroName": "Name",

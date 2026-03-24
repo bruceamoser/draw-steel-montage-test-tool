@@ -3,7 +3,14 @@
  * Main module entry point — registers hooks, socket, settings, and scene controls.
  * v0.4.2
  */
-import { MODULE_ID, SYSTEM_ID, FLAGS } from "./config.mjs";
+import {
+  MODULE_ID,
+  SYSTEM_ID,
+  FLAGS,
+  DIFFICULTY_TABLE_BASE,
+  BASE_HERO_COUNT,
+  MIN_LIMIT,
+} from "./config.mjs";
 import { MontageAPI } from "./api/montage-api.mjs";
 import { MontageTestDataModel, MONTAGE_TEST_ITEM_TYPE } from "./items/montage-test-model.mjs";
 import { MontageTestSheet } from "./items/montage-test-sheet.mjs";
@@ -37,6 +44,55 @@ function _registerDataModel() {
   } else {
     CONFIG.Item.dataModels[MONTAGE_TEST_ITEM_TYPE] = MontageTestDataModel;
   }
+}
+
+function _getLimitsForDifficulty(difficulty, participantCount) {
+  const base = DIFFICULTY_TABLE_BASE[difficulty] ?? DIFFICULTY_TABLE_BASE.moderate;
+  const delta = participantCount - BASE_HERO_COUNT;
+
+  return {
+    successLimit: Math.max(MIN_LIMIT, base.successLimit + delta),
+    failureLimit: Math.max(MIN_LIMIT, base.failureLimit + delta),
+  };
+}
+
+function _getOwnedActorParticipants() {
+  const nonGmUsers = game.users.filter((user) => !user.isGM);
+  if (!nonGmUsers.length) return [];
+
+  return game.actors
+    .filter((actor) => {
+      return nonGmUsers.some((user) => actor.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER));
+    })
+    .map((actor) => ({
+      actorUuid: actor.uuid,
+      name: actor.name,
+      img: actor.img ?? "",
+      round1: "",
+      round2: "",
+    }));
+}
+
+async function _populateMontageParticipantsOnCreate(item, userId) {
+  if (item.type !== MONTAGE_TEST_ITEM_TYPE) return;
+  if (item.parent || item.pack) return;
+  if (game.user.id !== userId) return;
+
+  const existingParticipants = item.system.participants ?? [];
+  if (existingParticipants.length) return;
+
+  const participants = _getOwnedActorParticipants();
+  if (!participants.length) return;
+
+  const difficulty = item.system.difficulty ?? "moderate";
+  const { successLimit, failureLimit } = _getLimitsForDifficulty(difficulty, participants.length);
+
+  await item.update({
+    "system.participants": participants,
+    "system.difficulty": difficulty,
+    "system.successLimit": successLimit,
+    "system.failureLimit": failureLimit,
+  });
 }
 
 /* ---------------------------------------- */
@@ -122,6 +178,10 @@ Hooks.once("ready", () => {
   if (moduleInstance) {
     moduleInstance.api = new MontageAPI();
   }
+
+  Hooks.on("createItem", (item, _options, userId) => {
+    void _populateMontageParticipantsOnCreate(item, userId);
+  });
 
   log("Ready");
 });

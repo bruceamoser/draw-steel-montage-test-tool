@@ -15,3 +15,7 @@ Foundry VTT V13 module for Draw Steel montage test encounters. See ARCHITECTURE.
 - Use the MCP server's `generate_montage_test` tool to create test montage data
 - Use `lookup_rule` or `get_rules_for_topic` to verify montage test mechanics
 - Reference `reference/` for Draw Steel montage test rules
+
+## Issue Workflow
+
+See [bruceamoser/Era-of-Embers CONTRIBUTING.md](https://github.com/bruceamoser/Era-of-Embers/blob/main/CONTRIBUTING.md) for the full issue workflow SOP — branch naming, commit conventions, PR process, and release procedures apply to all workspace repos.

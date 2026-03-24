@@ -195,6 +195,7 @@ body[data-theme="light"] form.mts-form input {
 .mts-chip-failure { background:var(--mts-failure-bg); color:var(--mts-failure-fg); }
 .mts-chip-outcome { background:rgba(21,101,192,0.12); color:#1565c0; }
 .mts-participants-header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+.mts-action-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .mts-drop-zone { padding:6px 10px; border:1px dashed var(--mts-border); border-radius:var(--mts-radius); font-size:11px; color:var(--mts-text-dim); margin-bottom:10px; text-align:center; }
 .mts-results-table { width:100%; border-collapse:collapse; font-size:12px; }
 .mts-results-table th { text-align:left; padding:5px 8px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:var(--mts-text-dim); border-bottom:2px solid var(--mts-border); }

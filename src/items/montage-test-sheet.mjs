@@ -24,11 +24,11 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
 
   static DEFAULT_OPTIONS = {
     classes: ["montage-app", "montage-test-sheet"],
-    position: { width: 1260, height: 1440 },
-    window: { resizable: true },
+    window: { width: 720, height: 720, resizable: true },
     form: { submitOnChange: true, closeOnSubmit: false },
     actions: {
       addParticipant: MontageTestSheet.#onAddParticipant,
+      addAllPlayers: MontageTestSheet.#onAddAllPlayers,
       removeParticipant: MontageTestSheet.#onRemoveParticipant,
     },
   };
@@ -261,12 +261,16 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
   // ── Action handlers (static, called via ApplicationV2 actions map) ────────
 
   static async #onAddParticipant() {
-    await this.#addParticipant();
+    await this._addParticipant();
+  }
+
+  static async #onAddAllPlayers() {
+    await this._addAllPlayers();
   }
 
   static async #onRemoveParticipant(event, target) {
     const index = Number(target.dataset.index);
-    await this.#removeParticipant(index);
+    await this._removeParticipant(index);
   }
 
   // ── Participant helpers ────────────────────────────────────────────────────
@@ -279,10 +283,7 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
     const system = this.document.system;
     const difficulty = difficultyOverride ?? system.difficulty ?? "moderate";
     const heroCount = (system.participants ?? []).length;
-    const base = DIFFICULTY_TABLE_BASE[difficulty] ?? DIFFICULTY_TABLE_BASE.moderate;
-    const delta = heroCount - BASE_HERO_COUNT;
-    const successLimit = Math.max(MIN_LIMIT, base.successLimit + delta);
-    const failureLimit = Math.max(MIN_LIMIT, base.failureLimit + delta);
+    const { successLimit, failureLimit } = this.#getLimitsForParticipantCount(heroCount, difficulty);
     await this.document.update({
       "system.difficulty": difficulty,
       "system.successLimit": successLimit,
@@ -290,25 +291,45 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
     });
   }
 
-  async #addParticipant(partial = {}) {
-    const participants = Array.from(this.document.system.participants ?? []);
-    participants.push({
-      actorUuid: partial.actorUuid ?? "",
-      name: partial.name ?? "",
-      img: partial.img ?? "",
-      round1: "",
-      round2: "",
-    });
-
-    // Compute new limits based on updated participant count
-    const difficulty = this.document.system.difficulty ?? "moderate";
-    const heroCount = participants.length;
+  #getLimitsForParticipantCount(heroCount, difficultyOverride) {
+    const difficulty = difficultyOverride ?? this.document.system.difficulty ?? "moderate";
     const base = DIFFICULTY_TABLE_BASE[difficulty] ?? DIFFICULTY_TABLE_BASE.moderate;
     const delta = heroCount - BASE_HERO_COUNT;
-    const successLimit = Math.max(MIN_LIMIT, base.successLimit + delta);
-    const failureLimit = Math.max(MIN_LIMIT, base.failureLimit + delta);
 
-    // Auto-grant OBSERVER permission on this item to all non-GM users
+    return {
+      difficulty,
+      successLimit: Math.max(MIN_LIMIT, base.successLimit + delta),
+      failureLimit: Math.max(MIN_LIMIT, base.failureLimit + delta),
+    };
+  }
+
+  #getMissingOwnedActorParticipants() {
+    const existingActorUuids = new Set(
+      (this.document.system.participants ?? [])
+        .map((participant) => participant.actorUuid)
+        .filter(Boolean),
+    );
+
+    const nonGmUsers = game.users.filter((user) => !user.isGM);
+    if (!nonGmUsers.length) return [];
+
+    return game.actors
+      .filter((actor) => {
+        if (existingActorUuids.has(actor.uuid)) return false;
+        return nonGmUsers.some((user) => actor.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER));
+      })
+      .map((actor) => ({
+        actorUuid: actor.uuid,
+        name: actor.name,
+        img: actor.img ?? "",
+        round1: "",
+        round2: "",
+      }));
+  }
+
+  async #updateParticipants(participants) {
+    const { difficulty, successLimit, failureLimit } = this.#getLimitsForParticipantCount(participants.length);
+
     const ownershipUpdate = {};
     for (const user of game.users.filter((u) => !u.isGM)) {
       if ((this.document.ownership[user.id] ?? CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE) < CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER) {
@@ -316,7 +337,6 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
       }
     }
 
-    // Single consolidated update — avoids multiple re-renders that break ProseMirror
     const updateData = {
       "system.participants": participants,
       "system.difficulty": difficulty,
@@ -326,28 +346,37 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
     if (Object.keys(ownershipUpdate).length) {
       updateData.ownership = { ...this.document.ownership, ...ownershipUpdate };
     }
+
     await this.document.update(updateData);
   }
 
-  async #removeParticipant(index) {
+  async _addParticipant(partial = {}) {
+    const participants = Array.from(this.document.system.participants ?? []);
+    participants.push({
+      actorUuid: partial.actorUuid ?? "",
+      name: partial.name ?? "",
+      img: partial.img ?? "",
+      round1: "",
+      round2: "",
+    });
+
+    await this.#updateParticipants(participants);
+  }
+
+  async _addAllPlayers() {
+    const participants = Array.from(this.document.system.participants ?? []);
+    const missingParticipants = this.#getMissingOwnedActorParticipants();
+    if (!missingParticipants.length) return;
+
+    await this.#updateParticipants([...participants, ...missingParticipants]);
+  }
+
+  async _removeParticipant(index) {
     const participants = Array.from(this.document.system.participants ?? []);
     if (index < 0 || index >= participants.length) return;
     participants.splice(index, 1);
 
-    // Recalc limits inline and combine into single update
-    const difficulty = this.document.system.difficulty ?? "moderate";
-    const heroCount = participants.length;
-    const base = DIFFICULTY_TABLE_BASE[difficulty] ?? DIFFICULTY_TABLE_BASE.moderate;
-    const delta = heroCount - BASE_HERO_COUNT;
-    const successLimit = Math.max(MIN_LIMIT, base.successLimit + delta);
-    const failureLimit = Math.max(MIN_LIMIT, base.failureLimit + delta);
-
-    await this.document.update({
-      "system.participants": participants,
-      "system.difficulty": difficulty,
-      "system.successLimit": successLimit,
-      "system.failureLimit": failureLimit,
-    });
+    await this.#updateParticipants(participants);
   }
 
   async #onDropActor(event) {
@@ -366,7 +395,7 @@ export class MontageTestSheet extends foundry.applications.api.HandlebarsApplica
     const already = (this.document.system.participants ?? []).some((p) => p.actorUuid === actor.uuid);
     if (already) return;
 
-    await this.#addParticipant({
+    await this._addParticipant({
       actorUuid: actor.uuid,
       name: actor.name,
       img: actor.img ?? "",
