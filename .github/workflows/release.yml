@@ -79,7 +79,7 @@ jobs:
                 \"notes\": \"https://github.com/${REPO}/releases/tag/${TAG}\",
                 \"compatibility\": {
                   \"minimum\": \"13\",
-                  \"verified\": \"13.351\"
+                  \"verified\": \"14\"
                 }
               }
             }")
