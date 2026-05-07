@@ -206,18 +206,18 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
   }
 
   static async #onAdvanceRound() {
-    const confirm = await Dialog.confirm({
-      title: game.i18n.localize("MONTAGE.Confirm.AdvanceRound"),
-      content: `<p>${game.i18n.localize("MONTAGE.Confirm.AdvanceRoundMsg")}</p>`,
-    });
+    const confirm = await MontageTrackerGMApp.#confirmDialog(
+      game.i18n.localize("MONTAGE.Confirm.AdvanceRound"),
+      game.i18n.localize("MONTAGE.Confirm.AdvanceRoundMsg"),
+    );
     if (confirm) await advanceRound();
   }
 
   static async #onEndEarly() {
-    const confirm = await Dialog.confirm({
-      title: game.i18n.localize("MONTAGE.Confirm.EndTest"),
-      content: `<p>${game.i18n.localize("MONTAGE.Confirm.EndTestMsg")}</p>`,
-    });
+    const confirm = await MontageTrackerGMApp.#confirmDialog(
+      game.i18n.localize("MONTAGE.Confirm.EndTest"),
+      game.i18n.localize("MONTAGE.Confirm.EndTestMsg"),
+    );
     if (confirm) await endTestEarly();
   }
 
@@ -285,18 +285,18 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
         </div>
       </form>`;
 
-    const result = await Dialog.prompt({
-      title: game.i18n.format("MONTAGE.Roll.EnterFor", { name: heroName }),
+    const result = await MontageTrackerGMApp.#promptDialog(
+      game.i18n.format("MONTAGE.Roll.EnterFor", { name: heroName }),
       content,
-      label: game.i18n.localize("MONTAGE.Roll.Submit"),
-      callback: (html) => {
+      game.i18n.localize("MONTAGE.Roll.Submit"),
+      (html) => {
         const form = html.querySelector ? html : html[0];
         return {
           rollTotal: parseInt(form.querySelector('[name="rollTotal"]').value) || 0,
           naturalRoll: parseInt(form.querySelector('[name="naturalRoll"]').value) || 0,
         };
       },
-    });
+    );
 
     if (result) {
       const { handleRollResult } = await import("../socket.mjs");
@@ -316,10 +316,10 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
     const hero = testData.heroes.find((h) => h.actorId === actorId);
     const heroName = hero?.name ?? "Unknown";
 
-    const confirm = await Dialog.confirm({
-      title: game.i18n.localize("MONTAGE.Confirm.RemoveAction"),
-      content: `<p>${game.i18n.format("MONTAGE.Confirm.RemoveActionMsg", { name: heroName })}</p>`,
-    });
+    const confirm = await MontageTrackerGMApp.#confirmDialog(
+      game.i18n.localize("MONTAGE.Confirm.RemoveAction"),
+      game.i18n.format("MONTAGE.Confirm.RemoveActionMsg", { name: heroName }),
+    );
     if (!confirm) return;
 
     await removeAction(actorId);
@@ -356,10 +356,44 @@ export class MontageTrackerGMApp extends HandlebarsApplicationMixin(ApplicationV
   }
 
   static async #onAbandonTest() {
-    const confirm = await Dialog.confirm({
-      title: game.i18n.localize("MONTAGE.Confirm.AbandonTest"),
-      content: `<p>${game.i18n.localize("MONTAGE.Confirm.AbandonTestMsg")}</p>`,
-    });
+    const confirm = await MontageTrackerGMApp.#confirmDialog(
+      game.i18n.localize("MONTAGE.Confirm.AbandonTest"),
+      game.i18n.localize("MONTAGE.Confirm.AbandonTestMsg"),
+    );
     if (confirm) await abandonTest();
+  }
+
+  // ── DialogV2 helpers (V14-compatible with V13 fallback) ─────────────────────
+
+  static async #confirmDialog(title, content) {
+    const DialogV2 = foundry.applications?.api?.DialogV2;
+    if (DialogV2?.confirm) {
+      return !!(await DialogV2.confirm({
+        window: { title },
+        content: `<p>${content}</p>`,
+      }));
+    }
+    if (globalThis.Dialog?.confirm) {
+      return !!(await globalThis.Dialog.confirm({ title, content: `<p>${content}</p>` }));
+    }
+    return false;
+  }
+
+  static async #promptDialog(title, content, label, callback) {
+    const DialogV2 = foundry.applications?.api?.DialogV2;
+    if (DialogV2?.prompt) {
+      return DialogV2.prompt({
+        window: { title },
+        content,
+        ok: {
+          label,
+          callback: (event, button, dialog) => callback(button.form ?? dialog.element),
+        },
+      });
+    }
+    if (globalThis.Dialog?.prompt) {
+      return globalThis.Dialog.prompt({ title, content, label, callback });
+    }
+    return null;
   }
 }
